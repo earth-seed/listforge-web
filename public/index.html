@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your App Name</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Optional: Add any custom styles here */
+        body {
+            background-color: #000000;
+        }
+    </style>
+</head>
+<body>
+    <div class="min-h-screen bg-black flex flex-col items-center justify-center p-4">
+        <!-- Logo Section -->
+        <div class="mb-12">
+            <img 
+                src="/logo.png"
+                alt="Your App Logo"
+                class="w-[250px] h-[250px] rounded-xl"
+            >
+        </div>
+
+        <!-- Auth Buttons -->
+        <div class="space-y-4 w-full max-w-sm">
+            <a 
+                href="login.html"
+                class="w-full flex items-center justify-center px-8 py-4 border border-transparent text-lg font-medium rounded-xl text-gray-900 bg-white hover:bg-gray-100 transition-colors duration-150"
+            >
+                Login
+            </a>
+            
+            <a
+                href="register.html"
+                class="w-full flex items-center justify-center px-8 py-4 border border-gray-700 text-lg font-medium rounded-xl text-white bg-gray-800 hover:bg-gray-700 transition-colors duration-150"
+            >
+                Create Account
+            </a>
+        </div>
+
+        <!-- Optional: App Description -->
+        <p class="mt-8 text-gray-400 text-center max-w-md">
+            Join the ListForge club to unlock all features and support the project
+        </p>
+    </div>
+</body>
+</html> 
