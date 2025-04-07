@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ListForge Club - Membership</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.paypal.com/sdk/js?client-id=AXvT6VcsIsSTG0hoqskkSqLqOiMqVS9iRH9LfIL5FV0tD6gur_nJjE7WPkPpVmre4tqw_rJhoohaNJIe&vault=true&intent=subscription" data-sdk-integration-source="button-factory"></script>
     <style>
@@ -25,7 +24,14 @@
         <!-- Navigation Bar -->
         <nav class="border-b border-gray-800 px-6 py-4">
             <div class="flex justify-between items-center">
-                <img src="/logo.png" alt="ListForge Logo" class="h-8">
+                <div class="flex items-center">
+                    <a href="/profile.html" class="px-4 py-2 bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+                        </svg>
+                        <span id="nav-username">Profile</span>
+                    </a>
+                </div>
                 <button 
                     onclick="logout()" 
                     class="px-4 py-2 bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors"
@@ -40,12 +46,58 @@
             <!-- Welcome Message -->
             <div class="text-center mb-16">
                 <h1 class="text-4xl font-bold mb-4">
-                    Welcome to the ListForge Club, <span id="username-display" class="text-blue-500">User</span>
+                    Thank you for supporting ListForge, <span id="username-display" class="text-blue-900">Member</span>
                 </h1>
                 <p class="text-gray-400 max-w-2xl mx-auto">
-                    Choose your membership plan and unlock all premium features of ListForge
+                    Choose your payment plan and unlock all premium features
                 </p>
             </div>
+
+            <!-- Premium Features -->
+            <div class="max-w-4xl mx-auto mb-16 pricing-card rounded-2xl p-8 border border-gray-800">
+                <h2 class="text-3xl font-bold mb-6 text-center">Premium Features</h2>
+                <ul class="space-y-6 mb-8 max-w-2xl mx-auto">
+                    <li class="flex items-start">
+                        <svg class="w-6 h-6 text-green-500 mr-4 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        <div>
+                            <h3 class="text-xl font-semibold text-white">Unlimited Lists</h3>
+                            <p class="text-gray-400">Create as many lists as you need with no restrictions</p>
+                        </div>
+                    </li>
+                    <li class="flex items-start">
+                        <svg class="w-6 h-6 text-green-500 mr-4 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        <div>
+                            <h3 class="text-xl font-semibold text-white">Priority Support</h3>
+                            <p class="text-gray-400">Get help when you need it with our dedicated support team</p>
+                        </div>
+                    </li>
+                    <li class="flex items-start">
+                        <svg class="w-6 h-6 text-green-500 mr-4 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        <div>
+                            <h3 class="text-xl font-semibold text-white">Advanced Analytics</h3>
+                            <p class="text-gray-400">Gain insights with detailed statistics and reporting</p>
+                        </div>
+                    </li>
+                    <li class="flex items-start">
+                        <svg class="w-6 h-6 text-green-500 mr-4 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        <div>
+                            <h3 class="text-xl font-semibold text-white">Cloud Sync</h3>
+                            <p class="text-gray-400">Access your lists from any device, anywhere</p>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Payment Options Title -->
+            <h2 class="text-3xl font-bold mb-8 text-center">Choose Your Payment Plan</h2>
 
             <!-- Pricing Cards -->
             <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
@@ -53,62 +105,22 @@
                 <div class="pricing-card rounded-2xl p-8 border border-gray-800">
                     <div class="mb-8">
                         <h2 class="text-2xl font-bold mb-2">Monthly Plan</h2>
-                        <div class="text-3xl font-bold text-blue-500 mb-4">$1.99<span class="text-lg text-gray-400">/month</span></div>
-                        <p class="text-gray-400">Perfect for trying out ListForge Club</p>
+                        <div class="text-3xl font-bold text-blue-900 mb-4">$1.99<span class="text-lg text-gray-400">/month</span></div>
+                        <p class="text-gray-400">Flexible monthly billing</p>
                     </div>
-                    <ul class="space-y-4 mb-8">
-                        <li class="flex items-center">
-                            <svg class="w-5 h-5 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                            </svg>
-                            All Premium Features
-                        </li>
-                        <li class="flex items-center">
-                            <svg class="w-5 h-5 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                            </svg>
-                            Priority Support
-                        </li>
-                        <li class="flex items-center">
-                            <svg class="w-5 h-5 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                            </svg>
-                            Cancel Anytime
-                        </li>
-                    </ul>
                     <div id="paypal-button-container-P-3R135215CC164745PM6ZRMCA"></div>
                 </div>
 
                 <!-- Yearly Plan -->
                 <div class="pricing-card rounded-2xl p-8 border border-gray-800 relative overflow-hidden">
-                    <div class="absolute top-4 right-4 bg-blue-600 px-3 py-1 rounded-full text-sm">
+                    <div class="absolute top-4 right-4 bg-blue-900 px-3 py-1 rounded-full text-sm">
                         Save 54%
                     </div>
                     <div class="mb-8">
                         <h2 class="text-2xl font-bold mb-2">Yearly Plan</h2>
-                        <div class="text-3xl font-bold text-blue-500 mb-4">$15<span class="text-lg text-gray-400">/year</span></div>
-                        <p class="text-gray-400">Best value for committed users</p>
+                        <div class="text-3xl font-bold text-blue-900 mb-4">$11<span class="text-lg text-gray-400">/year</span></div>
+                        <p class="text-gray-400">Best value annual billing</p>
                     </div>
-                    <ul class="space-y-4 mb-8">
-                        <li class="flex items-center">
-                            <svg class="w-5 h-5 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                            </svg>
-                            Everything in Monthly
-                        </li>
-                        <li class="flex items-center">
-                            <svg class="w-5 h-5 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                            </svg>
-                            2 Months Free
-                        </li>
-                        <li class="flex items-center">
-                            <svg class="w-5 h-5 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                            </svg>
-                            Exclusive Features
-                        </li>
-                    </ul>
                     <div id="paypal-button-container-P-39K05143NS868823TM6ZRMVQ"></div>
                 </div>
             </div>
@@ -116,30 +128,46 @@
     </div>
 
     <script>
-    // Check authentication and get username
+    // Check authentication immediately when page loads
     const token = localStorage.getItem('token');
+    console.log('Token exists:', !!token);
+    
     if (!token) {
+        console.log('No token found, redirecting to login');
         window.location.href = '/login.html';
+    } else {
+        // Check if user is authenticated with the server
+        fetch('/auth/check', {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        })
+        .then(response => {
+            console.log('Auth check response status:', response.status);
+            if (!response.ok) {
+                throw new Error('Authentication failed');
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Authentication successful, full data:', data);
+            
+            // Update username in welcome message
+            const usernameElement = document.getElementById('username-display');
+            if (data.username) {
+                console.log('Setting username to:', data.username);
+                usernameElement.textContent = data.username;
+            } else {
+                console.log('No username found in data, using default');
+                usernameElement.textContent = 'Member';
+            }
+        })
+        .catch(error => {
+            console.error('Auth check error:', error);
+            localStorage.removeItem('token');
+            window.location.href = '/login.html';
+        });
     }
-
-    // Fetch user data and update welcome message
-    fetch('/auth/check', {
-        headers: {
-            'Authorization': `Bearer ${token}`
-        }
-    })
-    .then(async response => {
-        if (!response.ok) {
-            throw new Error('Not authenticated');
-        }
-        const data = await response.json();
-        // Update username in welcome message
-        document.getElementById('username-display').textContent = data.username || 'Member';
-    })
-    .catch(() => {
-        localStorage.removeItem('token');
-        window.location.href = '/login.html';
-    });
 
     function subscribe(plan) {
         // Here we'll integrate with LemonSqueezy
@@ -159,7 +187,7 @@
         });
     }
 
-    // Monthly Subscription Button
+    // PayPal button setup for monthly plan
     paypal.Buttons({
         style: {
             shape: 'rect',
@@ -169,11 +197,17 @@
         },
         createSubscription: function(data, actions) {
             return actions.subscription.create({
-                plan_id: 'P-3R135215CC164745PM6ZRMCA'
+                'plan_id': 'P-3R135215CC164745PM6ZRMCA'
             });
         },
         onApprove: function(data, actions) {
-            fetch('/auth/update-subscription', {
+            console.log('Subscription approved:', data);
+            
+            // Get the token from localStorage
+            const token = localStorage.getItem('token');
+            
+            // Update subscription status in your database
+            return fetch('/auth/update-subscription', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -181,20 +215,28 @@
                 },
                 body: JSON.stringify({
                     subscriptionId: data.subscriptionID,
-                    plan: 'monthly'
+                    plan: 'monthly',
+                    status: 'active',
+                    paymentProvider: 'paypal',
+                    orderId: data.orderID
                 })
             })
             .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('Monthly subscription successful!');
+            .then(result => {
+                if (result.success) {
+                    alert('Thank you for your subscription! Your account has been upgraded to premium.');
+                    // Refresh the page to show premium features
                     window.location.reload();
                 }
+            })
+            .catch(error => {
+                console.error('Error updating subscription:', error);
+                alert('There was an error processing your subscription. Please contact support.');
             });
         }
     }).render('#paypal-button-container-P-3R135215CC164745PM6ZRMCA');
 
-    // Yearly Subscription Button
+    // PayPal button setup for yearly plan
     paypal.Buttons({
         style: {
             shape: 'rect',
@@ -204,11 +246,17 @@
         },
         createSubscription: function(data, actions) {
             return actions.subscription.create({
-                plan_id: 'P-39K05143NS868823TM6ZRMVQ'
+                'plan_id': 'P-39K05143NS868823TM6ZRMVQ'
             });
         },
         onApprove: function(data, actions) {
-            fetch('/auth/update-subscription', {
+            console.log('Subscription approved:', data);
+            
+            // Get the token from localStorage
+            const token = localStorage.getItem('token');
+            
+            // Update subscription status in your database
+            return fetch('/auth/update-subscription', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -216,15 +264,23 @@
                 },
                 body: JSON.stringify({
                     subscriptionId: data.subscriptionID,
-                    plan: 'yearly'
+                    plan: 'yearly',
+                    status: 'active',
+                    paymentProvider: 'paypal',
+                    orderId: data.orderID
                 })
             })
             .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('Yearly subscription successful!');
+            .then(result => {
+                if (result.success) {
+                    alert('Thank you for your subscription! Your account has been upgraded to premium.');
+                    // Refresh the page to show premium features
                     window.location.reload();
                 }
+            })
+            .catch(error => {
+                console.error('Error updating subscription:', error);
+                alert('There was an error processing your subscription. Please contact support.');
             });
         }
     }).render('#paypal-button-container-P-39K05143NS868823TM6ZRMVQ');

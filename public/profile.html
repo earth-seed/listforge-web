@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: #000000;
+        }
+        .profile-card {
+            background: linear-gradient(145deg, #1a1a1a 0%, #0a0a0a 100%);
+            transition: all 0.3s ease;
+        }
+        .profile-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+        .download-card {
+            background: linear-gradient(145deg, #1a1a1a 0%, #0a0a0a 100%);
+            transition: all 0.3s ease;
+            border: 1px solid #333;
+        }
+        .download-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+            border-color: #555;
+        }
+    </style>
+</head>
+<body>
+    <div class="min-h-screen bg-black flex flex-col p-4">
+        <!-- Header with back button -->
+        <header class="w-full flex justify-between items-center mb-8">
+            <a href="/membership.html" class="bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 rounded-lg flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+                </svg>
+                Back to Membership
+            </a>
+        </header>
+
+        <div class="max-w-4xl mx-auto w-full">
+            <!-- User Profile Section -->
+            <div class="profile-card rounded-2xl p-8 border border-gray-800 mb-8">
+                <div class="flex items-center mb-6">
+                    <div class="bg-gray-700 rounded-full p-4 mr-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-gray-300" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="text-3xl font-bold text-white" id="profile-username">Username</h1>
+                        <p class="text-gray-400" id="profile-email">user@example.com</p>
+                    </div>
+                </div>
+                
+                <!-- Account Information -->
+                <div class="bg-gray-800 rounded-lg p-6 mb-6">
+                    <h2 class="text-xl font-bold text-white mb-4">Account Information</h2>
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-gray-400 text-sm">Username</p>
+                            <p class="text-white" id="account-username">Username</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-400 text-sm">Email</p>
+                            <p class="text-white" id="account-email">user@example.com</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-400 text-sm">Member Since</p>
+                            <p class="text-white" id="account-created">January 1, 2023</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-400 text-sm">Membership Status</p>
+                            <p class="text-white" id="account-status">Free Member</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Subscription Information -->
+                <div id="subscription" class="bg-gray-800 rounded-lg p-6 mb-6">
+                    <h2 class="text-xl font-bold text-white mb-4">Subscription Details</h2>
+                    <div id="no-subscription" class="hidden">
+                        <p class="text-gray-300 mb-4">You don't have an active subscription.</p>
+                        <a href="/membership.html" class="inline-block bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg">
+                            View Membership Options
+                        </a>
+                    </div>
+                    <div id="active-subscription" class="hidden">
+                        <div class="grid md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <p class="text-gray-400 text-sm">Plan</p>
+                                <p class="text-white" id="sub-plan">Monthly</p>
+                            </div>
+                            <div>
+                                <p class="text-gray-400 text-sm">Status</p>
+                                <p class="text-green-500 font-bold" id="sub-status">Active</p>
+                            </div>
+                            <div>
+                                <p class="text-gray-400 text-sm">Next Payment</p>
+                                <p class="text-white" id="sub-expiration">January 1, 2024</p>
+                            </div>
+                            <div>
+                                <p class="text-gray-400 text-sm">Payment Method</p>
+                                <p class="text-white" id="sub-payment">PayPal</p>
+                            </div>
+                        </div>
+                        <div class="border-t border-gray-700 pt-4">
+                            <p class="text-gray-300 mb-4">To cancel or modify your subscription, please visit your PayPal account.</p>
+                            <a href="https://www.paypal.com/myaccount/autopay/" target="_blank" class="inline-block bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg">
+                                Manage in PayPal
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Download Section -->
+            <div class="profile-card rounded-2xl p-8 border border-gray-800">
+                <h2 class="text-2xl font-bold text-white mb-6">Download ListForge App</h2>
+                <p class="text-gray-400 mb-6">
+                    Get the ListForge app for your device to access your lists anywhere, anytime.
+                </p>
+                
+                <div class="grid md:grid-cols-3 gap-6">
+                    <!-- Windows Download -->
+                    <div class="download-card rounded-xl p-6 text-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto mb-4 text-gray-300" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M2 5a2 2 0 012-2h12a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V5zm3.293 1.293a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 01-1.414-1.414L7.586 10 5.293 7.707a1 1 0 010-1.414zM11 12a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd" />
+                        </svg>
+                        <h3 class="text-lg font-bold text-white mb-2">Windows</h3>
+                        <p class="text-gray-400 text-sm mb-4">Windows 10 or later</p>
+                        <a href="#" class="inline-block bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg w-full">
+                            Download for Windows
+                        </a>
+                    </div>
+                    
+                    <!-- macOS Download -->
+                    <div class="download-card rounded-xl p-6 text-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto mb-4 text-gray-300" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z" clip-rule="evenodd" />
+                        </svg>
+                        <h3 class="text-lg font-bold text-white mb-2">macOS</h3>
+                        <p class="text-gray-400 text-sm mb-4">macOS 11 or later</p>
+                        <a href="#" class="inline-block bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg w-full">
+                            Download for Mac
+                        </a>
+                    </div>
+                    
+                    <!-- Linux Download -->
+                    <div class="download-card rounded-xl p-6 text-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto mb-4 text-gray-300" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                        <h3 class="text-lg font-bold text-white mb-2">Linux</h3>
+                        <p class="text-gray-400 text-sm mb-4">Ubuntu, Debian, Fedora</p>
+                        <a href="#" class="inline-block bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg w-full">
+                            Download for Linux
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Mobile Apps -->
+                <div class="mt-8">
+                    <h3 class="text-xl font-bold text-white mb-4">Mobile Apps</h3>
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <!-- iOS App -->
+                        <div class="download-card rounded-xl p-6 flex items-center">
+                            <div class="bg-gray-700 rounded-full p-3 mr-4">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-300" viewBox="0 0 20 20" fill="currentColor">
+                                    <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" />
+                                    <path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1V5a1 1 0 00-1-1H3zM14 7a1 1 0 00-1 1v6.05A2.5 2.5 0 0115.95 16H17a1 1 0 001-1v-5a1 1 0 00-.293-.707l-2-2A1 1 0 0015 7h-1z" />
+                                </svg>
+                            </div>
+                            <div class="flex-1">
+                                <h3 class="text-lg font-bold text-white mb-1">iOS App</h3>
+                                <p class="text-gray-400 text-sm mb-3">iPhone and iPad</p>
+                                <a href="#" class="inline-block bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg">
+                                    Download on App Store
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <!-- Android App -->
+                        <div class="download-card rounded-xl p-6 flex items-center">
+                            <div class="bg-gray-700 rounded-full p-3 mr-4">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-300" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M7 2a2 2 0 00-2 2v12a2 2 0 002 2h6a2 2 0 002-2V4a2 2 0 00-2-2H7zm3 14a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
+                                </svg>
+                            </div>
+                            <div class="flex-1">
+                                <h3 class="text-lg font-bold text-white mb-1">Android App</h3>
+                                <p class="text-gray-400 text-sm mb-3">Android 8.0 or later</p>
+                                <a href="#" class="inline-block bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg">
+                                    Download on Google Play
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Check authentication when page loads
+        const token = localStorage.getItem('token');
+        
+        if (!token) {
+            window.location.href = '/login.html';
+        } else {
+            // Fetch user data
+            fetch('/auth/check', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Authentication failed');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('User data:', data);
+                
+                // Update profile information
+                document.getElementById('profile-username').textContent = data.username || 'User';
+                document.getElementById('profile-email').textContent = data.email || '';
+                
+                document.getElementById('account-username').textContent = data.username || 'User';
+                document.getElementById('account-email').textContent = data.email || '';
+                
+                // Format created date if available
+                if (data.createdAt) {
+                    const createdDate = new Date(data.createdAt._seconds * 1000);
+                    document.getElementById('account-created').textContent = createdDate.toLocaleDateString();
+                } else {
+                    document.getElementById('account-created').textContent = 'N/A';
+                }
+                
+                // Update subscription status
+                if (data.subscription && data.subscription.status === 'active') {
+                    document.getElementById('account-status').textContent = 'Premium Member';
+                    document.getElementById('account-status').classList.add('text-green-500');
+                    
+                    // Show active subscription details
+                    document.getElementById('no-subscription').classList.add('hidden');
+                    document.getElementById('active-subscription').classList.remove('hidden');
+                    
+                    // Update subscription details
+                    document.getElementById('sub-plan').textContent = 
+                        data.subscription.plan === 'yearly' ? 'Yearly' : 'Monthly';
+                    
+                    document.getElementById('sub-status').textContent = 'Active';
+                    
+                    // Format expiration date
+                    if (data.subscription.expirationDate) {
+                        const expirationDate = new Date(data.subscription.expirationDate._seconds * 1000);
+                        document.getElementById('sub-expiration').textContent = expirationDate.toLocaleDateString();
+                    } else {
+                        document.getElementById('sub-expiration').textContent = 'N/A';
+                    }
+                    
+                    document.getElementById('sub-payment').textContent = 
+                        data.subscription.paymentProvider === 'paypal' ? 'PayPal' : 'Credit Card';
+                } else {
+                    document.getElementById('account-status').textContent = 'Free Member';
+                    
+                    // Show no subscription message
+                    document.getElementById('no-subscription').classList.remove('hidden');
+                    document.getElementById('active-subscription').classList.add('hidden');
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching user data:', error);
+                localStorage.removeItem('token');
+                window.location.href = '/login.html';
+            });
+        }
+    </script>
+</body>
+</html> 

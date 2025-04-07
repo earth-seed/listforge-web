@@ -15,5 +15,9 @@ service cloud.firestore {
     match /{document=**} {
       allow read, write: if request.time < timestamp.date(2025, 3, 19);
     }
+
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
   }
 }

@@ -9,28 +9,26 @@
         body {
             background-color: #000000;
         }
+        .auth-card {
+            background: linear-gradient(145deg, #1a1a1a 0%, #0a0a0a 100%);
+            transition: all 0.3s ease;
+        }
+        .auth-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
     </style>
 </head>
 <body>
     <div class="min-h-screen bg-black flex flex-col items-center justify-center p-4">
-        <div class="w-full max-w-md">
-            <!-- Logo -->
-            <div class="text-center mb-8">
-                <a href="index.html">
-                    <img
-                        src="/logo.png"
-                        alt="Your App Logo"
-                        class="w-48 h-48 rounded-xl mx-auto"
-                    >
-                </a>
-            </div>
-
-            <!-- Registration Form -->
-            <div class="bg-gray-900 rounded-xl px-8 py-10 shadow-2xl">
-                <h2 class="text-3xl font-bold text-white mb-8 text-center">
-                    Create Account
-                </h2>
-
+        
+        <div class="max-w-md w-full">
+            <div class="auth-card rounded-2xl p-8 border border-gray-800">
+                <div class="text-center mb-8">
+                    <h2 class="text-2xl font-bold text-white">
+                        Create a ListForge Account
+                    </h2>
+                </div>
                 <form action="/auth/register" method="POST" class="space-y-6" autocomplete="off">
                     <div>
                         <label for="email" class="block text-sm font-medium text-gray-300">
@@ -95,18 +93,18 @@
 
                     <button
                         type="submit"
-                        class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-lg font-medium text-white bg-gray-600 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                        class="w-full flex justify-center py-3 px-4 border border-gray-700 rounded-lg shadow-sm text-lg font-medium text-white bg-gray-800 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
                     >
                         Create Account
                     </button>
                 </form>
-
-                <div class="mt-6 text-center">
-                    <a 
-                        href="login.html"
-                        class="text-sm text-gray-400 hover:text-white"
+                
+                <!-- Add Sign In button -->
+                <div class="mt-4">
+                    <a href="/login.html" 
+                       class="w-full flex justify-center py-3 px-4 border border-gray-700 rounded-lg shadow-sm text-lg font-medium text-white bg-gray-800 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
                     >
-                        Already have an account? Sign in
+                        Back to sign in
                     </a>
                 </div>
             </div>
@@ -127,9 +125,60 @@
         document.getElementById('error-message').classList.add('hidden');
     });
 
+    // Client-side validation
+    function validateForm() {
+        const email = document.getElementById('email').value;
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+        const errorDiv = document.getElementById('error-message');
+        
+        // Reset error message
+        errorDiv.classList.add('hidden');
+        
+        // Email validation
+        if (!email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+            errorDiv.textContent = 'Please enter a valid email address';
+            errorDiv.classList.remove('hidden');
+            return false;
+        }
+        
+        // Username validation
+        if (username.length < 3) {
+            errorDiv.textContent = 'Username must be at least 3 characters';
+            errorDiv.classList.remove('hidden');
+            return false;
+        }
+        
+        if (!username.match(/^[a-zA-Z0-9_]+$/)) {
+            errorDiv.textContent = 'Username can only contain letters, numbers, and underscores';
+            errorDiv.classList.remove('hidden');
+            return false;
+        }
+        
+        // Password validation
+        if (password.length < 6) {
+            errorDiv.textContent = 'Password must be at least 6 characters';
+            errorDiv.classList.remove('hidden');
+            return false;
+        }
+        
+        return true;
+    }
+
     document.querySelector('form').addEventListener('submit', async (e) => {
         e.preventDefault();
+        
+        // Run client-side validation
+        if (!validateForm()) {
+            return;
+        }
+        
         const errorDiv = document.getElementById('error-message');
+        const submitButton = document.querySelector('button[type="submit"]');
+        
+        // Disable button and show loading state
+        submitButton.disabled = true;
+        submitButton.innerHTML = 'Creating Account...';
         
         try {
             const response = await fetch('/auth/register', {
@@ -147,14 +196,24 @@
             const data = await response.json();
             
             if (response.ok) {
+                // Store the token in localStorage
+                localStorage.setItem('token', data.token);
                 window.location.href = '/membership.html';
             } else {
                 errorDiv.textContent = data.error;
                 errorDiv.classList.remove('hidden');
+                
+                // Reset button
+                submitButton.disabled = false;
+                submitButton.innerHTML = 'Create Account';
             }
         } catch (error) {
             errorDiv.textContent = 'An error occurred. Please try again.';
             errorDiv.classList.remove('hidden');
+            
+            // Reset button
+            submitButton.disabled = false;
+            submitButton.innerHTML = 'Create Account';
         }
     });
     </script>
