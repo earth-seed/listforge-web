@@ -18,7 +18,6 @@ const {
   where
 } = require('firebase/firestore');
 const admin = require('firebase-admin');
-const serviceAccount = require('./serviceAccount.json');  // Import your service account file
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 
@@ -46,7 +45,18 @@ transporter.verify(function(error, success) {
     }
 });
 
-// Initialize Firebase Admin with your service account
+// Initialize Firebase Admin with service account from environment variable
+let serviceAccount;
+try {
+    serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT ? 
+        JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT) : 
+        require('./serviceAccount.json');
+} catch (error) {
+    console.error('Error loading service account:', error);
+    serviceAccount = require('./serviceAccount.json');
+}
+
+// Initialize Firebase Admin
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount)
 });
@@ -555,6 +565,6 @@ app.post('/auth/reset-password', async (req, res) => {
 app.use(express.static('public'));
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on port ${PORT}`);
 }); 
