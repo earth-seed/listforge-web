@@ -3,8 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register - ListForge Club</title>
+    <title>ListForge - Create Account</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Add Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <style>
         body {
             background-color: #000000;
@@ -112,6 +115,22 @@
     </div>
 
     <script>
+    // Initialize Firebase
+    const firebaseConfig = {
+        apiKey: "AIzaSyDq3K_X-GCGvPP_IdzyOg8duE3Q6b5Udqs",
+        authDomain: "listforge-8943a.firebaseapp.com",
+        projectId: "listforge-8943a",
+        storageBucket: "listforge-8943a.firebasestorage.app",
+        messagingSenderId: "804960523648",
+        appId: "1:804960523648:web:262d50bf6a8b2f38565d65",
+        measurementId: "G-KNTJV4WMG1"
+    };
+    
+    // Initialize Firebase
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    
     // Clear form fields immediately
     document.getElementById('email').value = '';
     document.getElementById('username').value = '';
@@ -181,6 +200,7 @@
         submitButton.innerHTML = 'Creating Account...';
         
         try {
+            console.log('Starting registration process...');
             const response = await fetch('/auth/register', {
                 method: 'POST',
                 headers: {
@@ -193,14 +213,38 @@
                 })
             });
 
+            console.log('Received response:', response.status);
             const data = await response.json();
+            console.log('Response data:', data);
             
             if (response.ok) {
-                // Store the token in localStorage
-                localStorage.setItem('token', data.token);
-                window.location.href = '/membership.html';
+                try {
+                    console.log('Attempting to sign in with custom token...');
+                    const userCredential = await firebase.auth().signInWithCustomToken(data.token);
+                    console.log('Successfully signed in with custom token');
+                    
+                    console.log('Getting ID token...');
+                    const idToken = await userCredential.user.getIdToken();
+                    console.log('Successfully got ID token');
+                    
+                    // Store the ID token in localStorage
+                    localStorage.setItem('token', idToken);
+                    console.log('Stored token in localStorage');
+                    
+                    // Redirect to membership page
+                    window.location.href = '/membership.html';
+                } catch (firebaseError) {
+                    console.error('Firebase auth error:', firebaseError);
+                    errorDiv.textContent = `Authentication error: ${firebaseError.message}`;
+                    errorDiv.classList.remove('hidden');
+                    
+                    // Reset button
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = 'Create Account';
+                }
             } else {
-                errorDiv.textContent = data.error;
+                console.error('Server error:', data.error);
+                errorDiv.textContent = data.error || 'An error occurred during registration';
                 errorDiv.classList.remove('hidden');
                 
                 // Reset button
@@ -208,7 +252,8 @@
                 submitButton.innerHTML = 'Create Account';
             }
         } catch (error) {
-            errorDiv.textContent = 'An error occurred. Please try again.';
+            console.error('Registration error:', error);
+            errorDiv.textContent = `Error: ${error.message}`;
             errorDiv.classList.remove('hidden');
             
             // Reset button
