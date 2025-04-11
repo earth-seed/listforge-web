@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const express = require('express');
 const { initializeApp } = require('firebase/app');
 const { 
@@ -17,9 +19,32 @@ const {
 } = require('firebase/firestore');
 const admin = require('firebase-admin');
 const serviceAccount = require('./serviceAccount.json');  // Import your service account file
+const crypto = require('crypto');
+const nodemailer = require('nodemailer');
 
 const app = express();
 app.use(express.json());
+
+// Configure Nodemailer
+const transporter = nodemailer.createTransport({
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true,
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASSWORD
+    },
+    debug: true // Enable debug logs
+});
+
+// Verify the transporter configuration
+transporter.verify(function(error, success) {
+    if (error) {
+        console.log('Nodemailer configuration error:', error);
+    } else {
+        console.log('Nodemailer is ready to send emails');
+    }
+});
 
 // Initialize Firebase Admin with your service account
 admin.initializeApp({
@@ -413,6 +438,116 @@ app.get('/api/premium-feature', async (req, res) => {
     } catch (error) {
         console.error('Premium feature error:', error);
         res.status(500).json({ error: error.message });
+    }
+});
+
+// Password reset endpoint
+app.post('/auth/forgot-password', async (req, res) => {
+    try {
+        const { email } = req.body;
+        
+        if (!email) {
+            return res.status(400).json({ error: 'Email is required' });
+        }
+        
+        // Check if user exists
+        const userSnapshot = await admin.firestore()
+            .collection('users')
+            .where('email', '==', email)
+            .limit(1)
+            .get();
+            
+        if (userSnapshot.empty) {
+            // For security reasons, don't reveal if the email exists or not
+            return res.json({ success: true });
+        }
+        
+        const userId = userSnapshot.docs[0].id;
+        
+        // Generate a password reset token
+        const resetToken = crypto.randomBytes(20).toString('hex');
+        const resetExpires = Date.now() + 3600000; // 1 hour
+        
+        // Store the token in the user's document
+        await admin.firestore().collection('users').doc(userId).update({
+            resetPasswordToken: resetToken,
+            resetPasswordExpires: resetExpires
+        });
+        
+        // Create reset URL
+        const resetUrl = `${req.protocol}://${req.get('host')}/reset-password.html?token=${resetToken}`;
+        
+        // Send email
+        const mailOptions = {
+            from: `"ListForge Support" <${process.env.EMAIL_USER}>`,
+            to: email,
+            subject: 'ListForge Password Reset Request',
+            html: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h2 style="color: #2d3748; margin-bottom: 20px;">Password Reset Request</h2>
+                    <p style="color: #4a5568; margin-bottom: 20px;">You recently requested to reset your password for your ListForge account. Click the button below to reset it:</p>
+                    <div style="text-align: center; margin: 30px 0;">
+                        <a href="${resetUrl}" style="background-color: #2d3748; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">Reset Your Password</a>
+                    </div>
+                    <p style="color: #4a5568; margin-bottom: 10px;">If you did not request a password reset, please ignore this email or contact support if you have concerns.</p>
+                    <p style="color: #4a5568; margin-bottom: 20px;">This password reset link is only valid for 1 hour.</p>
+                    <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;">
+                    <p style="color: #718096; font-size: 12px;">If you're having trouble clicking the password reset button, copy and paste the URL below into your web browser:</p>
+                    <p style="color: #718096; font-size: 12px; word-break: break-all;">${resetUrl}</p>
+                </div>
+            `
+        };
+        
+        await transporter.sendMail(mailOptions);
+        
+        res.json({ success: true });
+        
+    } catch (error) {
+        console.error('Password reset error:', error);
+        res.status(500).json({ error: 'An error occurred while processing your request' });
+    }
+});
+
+// Reset password endpoint
+app.post('/auth/reset-password', async (req, res) => {
+    try {
+        const { token, password } = req.body;
+        
+        if (!token || !password) {
+            return res.status(400).json({ error: 'Token and password are required' });
+        }
+        
+        // Find user with matching reset token
+        const usersSnapshot = await admin.firestore()
+            .collection('users')
+            .where('resetPasswordToken', '==', token)
+            .where('resetPasswordExpires', '>', Date.now())
+            .limit(1)
+            .get();
+            
+        if (usersSnapshot.empty) {
+            return res.status(400).json({ error: 'Invalid or expired reset token' });
+        }
+        
+        const userId = usersSnapshot.docs[0].id;
+        const userEmail = usersSnapshot.docs[0].data().email;
+        
+        // Update user's password in Firebase Auth
+        await admin.auth().updateUser(userId, {
+            password: password
+        });
+        
+        // Clear reset token
+        await admin.firestore().collection('users').doc(userId).update({
+            resetPasswordToken: null,
+            resetPasswordExpires: null
+        });
+        
+        res.json({ success: true });
+        
+    } catch (error) {
+        console.error('Password reset error:', error);
+        res.status(500).json({ error: 'An error occurred while resetting your password' });
     }
 });
 
