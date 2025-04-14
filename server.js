@@ -255,7 +255,9 @@ app.get('/auth/check', async (req, res) => {
             authenticated: true, 
             uid: decodedToken.uid,
             username: userData.username || userRecord.displayName || 'Member',
-            email: userRecord.email
+            email: userRecord.email,
+            subscription: userData.subscription || { status: 'inactive' },
+            createdAt: userData.createdAt
         });
     } catch (error) {
         console.error('Auth check error:', error);
@@ -420,6 +422,112 @@ async function hasUserPremiumAccess(userId) {
     }
 }
 
+// Helper function to validate and apply promo code
+async function applyPromoCode(userId, promoCode) {
+    try {
+        // Get the promo code from Firestore
+        const promoDoc = await admin.firestore()
+            .collection('promo_codes')
+            .doc(promoCode)
+            .get();
+
+        if (!promoDoc.exists) {
+            return { success: false, error: 'Invalid promo code' };
+        }
+
+        const promoData = promoDoc.data();
+
+        // Check if promo code is expired
+        if (promoData.expiresAt && promoData.expiresAt.toDate() < new Date()) {
+            return { success: false, error: 'Promo code has expired' };
+        }
+
+        // Check if promo code has been used too many times
+        if (promoData.maxUses && promoData.uses >= promoData.maxUses) {
+            return { success: false, error: 'Promo code has reached its maximum uses' };
+        }
+
+        // Check if user has already used this promo code
+        const userPromoDoc = await admin.firestore()
+            .collection('user_promo_codes')
+            .doc(`${userId}_${promoCode}`)
+            .get();
+
+        if (userPromoDoc.exists) {
+            return { success: false, error: 'You have already used this promo code' };
+        }
+
+        // Calculate expiration date (30 days from now)
+        const expirationDate = new Date();
+        expirationDate.setDate(expirationDate.getDate() + 365);
+
+        // Update user's subscription
+        await admin.firestore().collection('users').doc(userId).update({
+            subscription: {
+                status: 'active',
+                plan: 'yearly',
+                startDate: admin.firestore.FieldValue.serverTimestamp(),
+                expiryDate: admin.firestore.Timestamp.fromDate(expirationDate),
+                paymentProvider: 'promo',
+                promoCode: promoCode,
+                updatedAt: admin.firestore.FieldValue.serverTimestamp()
+            }
+        });
+
+        // Record promo code usage
+        await admin.firestore()
+            .collection('user_promo_codes')
+            .doc(`${userId}_${promoCode}`)
+            .set({
+                userId,
+                promoCode,
+                usedAt: admin.firestore.FieldValue.serverTimestamp()
+            });
+
+        // Update promo code usage count
+        await admin.firestore()
+            .collection('promo_codes')
+            .doc(promoCode)
+            .update({
+                uses: admin.firestore.FieldValue.increment(1)
+            });
+
+        return { success: true };
+    } catch (error) {
+        console.error('Error applying promo code:', error);
+        return { success: false, error: 'An error occurred while applying the promo code' };
+    }
+}
+
+// Endpoint to apply promo code
+app.post('/auth/apply-promo', async (req, res) => {
+    try {
+        const token = req.headers.authorization?.split('Bearer ')[1];
+        if (!token) {
+            return res.status(401).json({ error: 'No token provided' });
+        }
+
+        const decodedToken = await admin.auth().verifyIdToken(token);
+        const userId = decodedToken.uid;
+        const { promoCode } = req.body;
+
+        if (!promoCode) {
+            return res.status(400).json({ error: 'Promo code is required' });
+        }
+
+        const result = await applyPromoCode(userId, promoCode);
+        
+        if (result.success) {
+            res.json({ success: true });
+        } else {
+            res.status(400).json({ error: result.error });
+        }
+    } catch (error) {
+        console.error('Promo code application error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // Example of a protected endpoint that requires premium
 app.get('/api/premium-feature', async (req, res) => {
     try {
@@ -558,6 +666,37 @@ app.post('/auth/reset-password', async (req, res) => {
     } catch (error) {
         console.error('Password reset error:', error);
         res.status(500).json({ error: 'An error occurred while resetting your password' });
+    }
+});
+
+// Password change endpoint
+app.post('/auth/change-password', async (req, res) => {
+    try {
+        const token = req.headers.authorization?.split('Bearer ')[1];
+        if (!token) {
+            return res.status(401).json({ error: 'No token provided' });
+        }
+
+        const decodedToken = await admin.auth().verifyIdToken(token);
+        const { newPassword } = req.body;
+
+        if (!newPassword) {
+            return res.status(400).json({ error: 'New password is required' });
+        }
+
+        if (newPassword.length < 6) {
+            return res.status(400).json({ error: 'New password must be at least 6 characters long' });
+        }
+
+        // Update the password
+        await admin.auth().updateUser(decodedToken.uid, {
+            password: newPassword
+        });
+
+        res.json({ success: true, message: 'Password updated successfully' });
+    } catch (error) {
+        console.error('Password change error:', error);
+        res.status(500).json({ error: error.message });
     }
 });
 

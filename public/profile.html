@@ -57,7 +57,7 @@
                         </div>
                     </div>
                     <button 
-                        onclick="signOut()"
+                        onclick="logout()"
                         class="bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors"
                     >
                         Sign Out
@@ -122,6 +122,44 @@
                             </a>
                         </div>
                     </div>
+                </div>
+
+                <!-- Password Change Section -->
+                <div class="bg-gray-800 rounded-xl p-6 mb-6">
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-xl font-bold text-white">Change Password</h2>
+                        <button 
+                            id="togglePasswordForm" 
+                            class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors"
+                        >
+                            Change Password
+                        </button>
+                    </div>
+                    <form id="passwordChangeForm" class="space-y-4 mt-4 hidden">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-400 mb-1">New Password</label>
+                            <input type="password" id="newPassword" class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-400 mb-1">Confirm New Password</label>
+                            <input type="password" id="confirmPassword" class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white" required>
+                        </div>
+                        <div class="flex justify-end space-x-4">
+                            <button 
+                                type="button" 
+                                id="cancelPasswordChange" 
+                                class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button 
+                                type="submit" 
+                                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+                            >
+                                Update Password
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
             
@@ -213,88 +251,237 @@
     </div>
 
     <script>
-        // Add sign out function
-        function signOut() {
-            // Clear the token
-            localStorage.removeItem('token');
-            // Redirect to login page
+        // Check authentication immediately when page loads
+        const token = localStorage.getItem('token');
+        console.log('Token exists:', !!token);
+        
+        if (!token) {
+            console.log('No token found, redirecting to login');
             window.location.href = '/login.html';
         }
 
-        // Check authentication when page loads
-        const token = localStorage.getItem('token');
-        
-        if (!token) {
+        // Get user data and update profile
+        fetch('/auth/check', {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        })
+        .then(response => {
+            console.log('Auth check response status:', response.status);
+            if (!response.ok) {
+                throw new Error('Authentication failed');
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Authentication successful, full data:', data);
+            
+            // Update username in welcome message
+            const usernameElement = document.getElementById('profile-username');
+            if (data.username) {
+                console.log('Setting username to:', data.username);
+                usernameElement.textContent = data.username;
+            } else {
+                console.log('No username found in data, using default');
+                usernameElement.textContent = 'Member';
+            }
+            
+            // Update email
+            const emailElement = document.getElementById('profile-email');
+            if (data.email) {
+                console.log('Setting email to:', data.email);
+                emailElement.textContent = data.email;
+            } else {
+                console.log('No email found in data, using default');
+                emailElement.textContent = 'user@example.com';
+            }
+            
+            // Update account information
+            const accountUsername = document.getElementById('account-username');
+            if (data.username) {
+                console.log('Setting account username to:', data.username);
+                accountUsername.textContent = data.username;
+            } else {
+                console.log('No account username found in data, using default');
+                accountUsername.textContent = 'Member';
+            }
+            
+            // Update email in account information
+            const accountEmail = document.getElementById('account-email');
+            if (data.email) {
+                console.log('Setting account email to:', data.email);
+                accountEmail.textContent = data.email;
+            } else {
+                console.log('No account email found in data, using default');
+                accountEmail.textContent = 'user@example.com';
+            }
+            
+            // Format created date if available
+            const accountCreated = document.getElementById('account-created');
+            if (data.createdAt) {
+                console.log('Setting account created date to:', data.createdAt._seconds * 1000);
+                const createdDate = new Date(data.createdAt._seconds * 1000);
+                accountCreated.textContent = createdDate.toLocaleDateString();
+            } else {
+                console.log('No account created date found in data, using default');
+                accountCreated.textContent = 'N/A';
+            }
+            
+            // Update account status
+            const accountStatus = document.getElementById('account-status');
+            if (data.subscription && data.subscription.status === 'active') {
+                console.log('Setting account status to: Premium Member');
+                accountStatus.textContent = 'Premium Member';
+                accountStatus.classList.add('text-blue-500');
+                
+                // Show active subscription details
+                document.getElementById('no-subscription').classList.add('hidden');
+                document.getElementById('active-subscription').classList.remove('hidden');
+                
+                // Update subscription details
+                const subPlan = document.getElementById('sub-plan');
+                if (data.subscription.plan === 'yearly') {
+                    console.log('Setting subscription plan to: Yearly');
+                    subPlan.textContent = 'Yearly';
+                } else {
+                    console.log('Setting subscription plan to: Monthly');
+                    subPlan.textContent = 'Monthly';
+                }
+                
+                const subStatus = document.getElementById('sub-status');
+                console.log('Setting subscription status to: Active');
+                subStatus.textContent = 'Active';
+                subStatus.classList.add('text-blue-500');
+                
+                // Format expiration date
+                const subExpiration = document.getElementById('sub-expiration');
+                if (data.subscription.expirationDate) {
+                    console.log('Setting subscription expiration date to:', data.subscription.expirationDate._seconds * 1000);
+                    const expirationDate = new Date(data.subscription.expirationDate._seconds * 1000);
+                    subExpiration.textContent = expirationDate.toLocaleDateString();
+                } else {
+                    console.log('No subscription expiration date found in data, using default');
+                    subExpiration.textContent = 'N/A';
+                }
+                
+                const subPayment = document.getElementById('sub-payment');
+                console.log('Setting subscription payment method to:', data.subscription.paymentProvider);
+                if (data.subscription.paymentProvider === 'paypal') {
+                    console.log('Setting subscription payment method to: PayPal');
+                    subPayment.textContent = 'PayPal';
+                } else if (data.subscription.paymentProvider === 'promo') {
+                    console.log('Setting subscription payment method to: Promo Code');
+                    subPayment.textContent = 'Promo Code';
+                } else {
+                    console.log('Setting subscription payment method to: Credit Card');
+                    subPayment.textContent = 'Credit Card';
+                }
+            } else {
+                console.log('Setting account status to: Free Member');
+                accountStatus.textContent = 'Free Member';
+                accountStatus.classList.remove('text-blue-500');
+                
+                // Show no subscription message
+                document.getElementById('no-subscription').classList.remove('hidden');
+                document.getElementById('active-subscription').classList.add('hidden');
+            }
+        })
+        .catch(error => {
+            console.error('Auth check error:', error);
+            localStorage.removeItem('token');
             window.location.href = '/login.html';
-        } else {
-            // Fetch user data
-            fetch('/auth/check', {
+        });
+
+        function logout() {
+            localStorage.removeItem('token');
+            fetch('/auth/logout', {
+                method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Authentication failed');
-                }
-                return response.json();
-            })
-            .then(data => {
-                console.log('User data:', data);
-                
-                // Update profile information
-                document.getElementById('profile-username').textContent = data.username || 'User';
-                document.getElementById('profile-email').textContent = data.email || '';
-                
-                document.getElementById('account-username').textContent = data.username || 'User';
-                document.getElementById('account-email').textContent = data.email || '';
-                
-                // Format created date if available
-                if (data.createdAt) {
-                    const createdDate = new Date(data.createdAt._seconds * 1000);
-                    document.getElementById('account-created').textContent = createdDate.toLocaleDateString();
-                } else {
-                    document.getElementById('account-created').textContent = 'N/A';
-                }
-                
-                // Update subscription status
-                if (data.subscription && data.subscription.status === 'active') {
-                    document.getElementById('account-status').textContent = 'Premium Member';
-                    document.getElementById('account-status').classList.add('text-green-500');
-                    
-                    // Show active subscription details
-                    document.getElementById('no-subscription').classList.add('hidden');
-                    document.getElementById('active-subscription').classList.remove('hidden');
-                    
-                    // Update subscription details
-                    document.getElementById('sub-plan').textContent = 
-                        data.subscription.plan === 'yearly' ? 'Yearly' : 'Monthly';
-                    
-                    document.getElementById('sub-status').textContent = 'Active';
-                    
-                    // Format expiration date
-                    if (data.subscription.expirationDate) {
-                        const expirationDate = new Date(data.subscription.expirationDate._seconds * 1000);
-                        document.getElementById('sub-expiration').textContent = expirationDate.toLocaleDateString();
-                    } else {
-                        document.getElementById('sub-expiration').textContent = 'N/A';
-                    }
-                    
-                    document.getElementById('sub-payment').textContent = 
-                        data.subscription.paymentProvider === 'paypal' ? 'PayPal' : 'Credit Card';
-                } else {
-                    document.getElementById('account-status').textContent = 'Free Member';
-                    
-                    // Show no subscription message
-                    document.getElementById('no-subscription').classList.remove('hidden');
-                    document.getElementById('active-subscription').classList.add('hidden');
-                }
-            })
-            .catch(error => {
-                console.error('Error fetching user data:', error);
-                localStorage.removeItem('token');
+            }).then(() => {
                 window.location.href = '/login.html';
             });
+        }
+
+        // Password change form toggle
+        const togglePasswordForm = document.getElementById('togglePasswordForm');
+        const passwordChangeForm = document.getElementById('passwordChangeForm');
+        const cancelPasswordChange = document.getElementById('cancelPasswordChange');
+
+        togglePasswordForm.addEventListener('click', () => {
+            passwordChangeForm.classList.remove('hidden');
+            togglePasswordForm.classList.add('hidden');
+        });
+
+        cancelPasswordChange.addEventListener('click', () => {
+            passwordChangeForm.classList.add('hidden');
+            togglePasswordForm.classList.remove('hidden');
+            passwordChangeForm.reset();
+        });
+
+        // Password change form handling
+        passwordChangeForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            // Validate passwords match
+            if (newPassword !== confirmPassword) {
+                showNotification('New passwords do not match', 'error');
+                return;
+            }
+            
+            // Validate password length
+            if (newPassword.length < 6) {
+                showNotification('New password must be at least 6 characters long', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/auth/change-password', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify({ newPassword })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showNotification('Password updated successfully', 'success');
+                    // Hide form and reset
+                    passwordChangeForm.classList.add('hidden');
+                    togglePasswordForm.classList.remove('hidden');
+                    passwordChangeForm.reset();
+                } else {
+                    showNotification(data.error || 'Failed to update password', 'error');
+                }
+            } catch (error) {
+                console.error('Password change error:', error);
+                showNotification('An error occurred while changing password', 'error');
+            }
+        });
+
+        // Helper function to show notifications
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 px-6 py-3 rounded-lg text-white ${
+                type === 'success' ? 'bg-green-600' : 
+                type === 'error' ? 'bg-red-600' : 
+                'bg-blue-600'
+            }`;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            // Remove notification after 3 seconds
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
         }
     </script>
 </body>

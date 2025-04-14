@@ -48,7 +48,7 @@
                 <h1 class="text-4xl font-bold mb-4">
                     Thank you for supporting ListForge, <span id="username-display" class="text-blue-900">Member</span>
                 </h1>
-                <p class="text-gray-400 max-w-2xl mx-auto">
+                <p class="text-gray-400 max-w-2xl mx-auto" id="membership-status">
                     Choose your payment plan and unlock all premium features
                 </p>
             </div>
@@ -58,7 +58,7 @@
                 <h2 class="text-3xl font-bold mb-6 text-center">Premium Features</h2>
                 <ul class="space-y-6 mb-8 max-w-2xl mx-auto">
                     <li class="flex items-start">
-                        <svg class="w-6 h-6 text-green-500 mr-4 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-6 h-6 text-blue-500 mr-4 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                         </svg>
                         <div>
@@ -67,7 +67,7 @@
                         </div>
                     </li>
                     <li class="flex items-start">
-                        <svg class="w-6 h-6 text-green-500 mr-4 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-6 h-6 text-blue-500 mr-4 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                         </svg>
                         <div>
@@ -76,7 +76,7 @@
                         </div>
                     </li>
                     <li class="flex items-start">
-                        <svg class="w-6 h-6 text-green-500 mr-4 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-6 h-6 text-blue-500 mr-4 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                         </svg>
                         <div>
@@ -87,11 +87,55 @@
                 </ul>
             </div>
 
+            <!-- Promo Code Section (Only show for non-premium users) -->
+            <div id="promo-section" class="max-w-4xl mx-auto mb-8 pricing-card rounded-2xl p-8 border border-gray-800">
+                <h2 class="text-2xl font-bold mb-4 text-center">Have a Promo Code?</h2>
+                <div class="flex items-center justify-center space-x-4">
+                    <input
+                        type="text"
+                        id="promo-code"
+                        placeholder="Enter your promo code"
+                        class="px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
+                    >
+                    <button
+                        onclick="applyPromoCode()"
+                        class="px-4 py-2 bg-blue-900 hover:bg-blue-800 text-white rounded-lg transition-colors"
+                    >
+                        Apply
+                    </button>
+                </div>
+                <p id="promo-message" class="mt-4 text-center text-gray-400 hidden"></p>
+            </div>
+
+            <!-- Premium User Section (Only show for premium users) -->
+            <div id="premium-user-section" class="max-w-4xl mx-auto mb-8 pricing-card rounded-2xl p-8 border border-gray-800 hidden">
+                <h2 class="text-2xl font-bold mb-4 text-center text-blue-500">Premium Member Status</h2>
+                <div class="grid md:grid-cols-2 gap-4 mb-6">
+                    <div>
+                        <p class="text-gray-400 text-sm">Current Plan</p>
+                        <p class="text-white text-lg" id="current-plan">Monthly</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-400 text-sm">Expiration Date</p>
+                        <p class="text-white text-lg" id="expiration-date">January 1, 2024</p>
+                    </div>
+                </div>
+                <div class="text-center">
+                    <p class="text-gray-400 mb-4">Thank you for being a premium member! Your support helps us continue improving ListForge.</p>
+                    <button
+                        onclick="showUpgradeOptions()"
+                        class="px-4 py-2 bg-blue-900 hover:bg-blue-800 text-white rounded-lg transition-colors"
+                    >
+                        Change Plan
+                    </button>
+                </div>
+            </div>
+
             <!-- Payment Options Title -->
-            <h2 class="text-3xl font-bold mb-8 text-center">Choose Your Payment Plan</h2>
+            <h2 id="payment-options-title" class="text-3xl font-bold mb-8 text-center">Choose Your Payment Plan</h2>
 
             <!-- Pricing Cards -->
-            <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            <div id="pricing-cards" class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
                 <!-- Monthly Plan -->
                 <div class="pricing-card rounded-2xl p-8 border border-gray-800">
                     <div class="mb-8">
@@ -176,6 +220,51 @@
         }).then(() => {
             window.location.href = '/login.html';
         });
+    }
+
+    async function applyPromoCode() {
+        const promoCode = document.getElementById('promo-code').value.trim();
+        const messageElement = document.getElementById('promo-message');
+        
+        if (!promoCode) {
+            messageElement.textContent = 'Please enter a promo code';
+            messageElement.classList.remove('hidden');
+            return;
+        }
+
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch('/auth/apply-promo', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ promoCode })
+            });
+
+            const data = await response.json();
+            
+            if (response.ok) {
+                messageElement.textContent = 'Promo code applied successfully! Your account has been upgraded to premium.';
+                messageElement.classList.remove('hidden');
+                messageElement.classList.add('text-green-500');
+                
+                // Hide the payment options since they're now premium
+                document.querySelector('.grid.md\\:grid-cols-2').classList.add('hidden');
+                
+                // Refresh the page after 2 seconds to show premium features
+                setTimeout(() => window.location.reload(), 2000);
+            } else {
+                messageElement.textContent = data.error || 'Invalid promo code';
+                messageElement.classList.remove('hidden');
+                messageElement.classList.add('text-red-500');
+            }
+        } catch (error) {
+            messageElement.textContent = 'An error occurred. Please try again.';
+            messageElement.classList.remove('hidden');
+            messageElement.classList.add('text-red-500');
+        }
     }
 
     // PayPal button setup for monthly plan
@@ -275,6 +364,57 @@
             });
         }
     }).render('#paypal-button-container-P-39K05143NS868823TM6ZRMVQ');
+
+    // Add this function to check subscription status when page loads
+    async function checkSubscriptionStatus() {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch('/auth/check', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            
+            const data = await response.json();
+            
+            if (data.subscription && data.subscription.status === 'active') {
+                // User is premium, show premium section and hide payment options
+                document.getElementById('premium-user-section').classList.remove('hidden');
+                document.getElementById('promo-section').classList.add('hidden');
+                document.getElementById('payment-options-title').classList.add('hidden');
+                document.getElementById('pricing-cards').classList.add('hidden');
+                
+                // Update premium user info
+                document.getElementById('current-plan').textContent = data.subscription.plan === 'yearly' ? 'Yearly' : 'Monthly';
+                if (data.subscription.expirationDate) {
+                    const expiryDate = new Date(data.subscription.expirationDate._seconds * 1000);
+                    document.getElementById('expiration-date').textContent = expiryDate.toLocaleDateString();
+                }
+                
+                // Update membership status message
+                document.getElementById('membership-status').textContent = 'You are a premium member!';
+                document.getElementById('membership-status').classList.add('text-blue-500');
+            } else {
+                // User is not premium, show payment options
+                document.getElementById('premium-user-section').classList.add('hidden');
+                document.getElementById('promo-section').classList.remove('hidden');
+                document.getElementById('payment-options-title').classList.remove('hidden');
+                document.getElementById('pricing-cards').classList.remove('hidden');
+            }
+        } catch (error) {
+            console.error('Error checking subscription status:', error);
+        }
+    }
+
+    // Call checkSubscriptionStatus when page loads
+    document.addEventListener('DOMContentLoaded', checkSubscriptionStatus);
+
+    // Add this function to show upgrade options
+    function showUpgradeOptions() {
+        document.getElementById('premium-user-section').classList.add('hidden');
+        document.getElementById('payment-options-title').classList.remove('hidden');
+        document.getElementById('pricing-cards').classList.remove('hidden');
+    }
     </script>
 </body>
 </html> 
