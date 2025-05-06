@@ -21,6 +21,8 @@ const admin = require('firebase-admin');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 const axios = require('axios');
+const path = require('path');
+const fs = require('fs');
 
 const app = express();
 app.use(express.json());
@@ -894,6 +896,33 @@ app.get('/download/mac', async (req, res) => {
         console.error('Mac download error:', error.message);
         res.status(500).send(`Download failed: ${error.message}`);
     }
+});
+
+// Installation guide placeholder endpoints
+app.get('/guides/windows', (req, res) => {
+    // This is a placeholder route for when the Windows installation guide PDF is ready
+    res.status(404).send('Windows installation guide coming soon!');
+    
+    // When the PDF is ready, uncomment the following:
+    /*
+    const filePath = path.join(__dirname, 'public/guides/windows-installation.pdf');
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'inline; filename="ListForge-Windows-Installation-Guide.pdf"');
+    fs.createReadStream(filePath).pipe(res);
+    */
+});
+
+app.get('/guides/mac', (req, res) => {
+    // This is a placeholder route for when the Mac installation guide PDF is ready
+    res.status(404).send('Mac installation guide coming soon!');
+    
+    // When the PDF is ready, uncomment the following:
+    /*
+    const filePath = path.join(__dirname, 'public/guides/mac-installation.pdf');
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'inline; filename="ListForge-Mac-Installation-Guide.pdf"');
+    fs.createReadStream(filePath).pipe(res);
+    */
 });
 
 // Serve static files
