@@ -20,6 +20,7 @@ const {
 const admin = require('firebase-admin');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
+const axios = require('axios');
 
 const app = express();
 app.use(express.json());
@@ -777,6 +778,121 @@ app.post('/admin/update-expired-subscriptions', async (req, res) => {
     } catch (error) {
         console.error('Error:', error);
         res.status(500).json({ error: error.message });
+    }
+});
+
+// Helper function to get asset URLs from latest release
+async function getLatestReleaseAssets() {
+    try {
+        console.log('Fetching latest release info from GitHub');
+        const response = await axios.get('https://api.github.com/repos/earth-seed/ListForge-Releases/releases/latest');
+        const assets = response.data.assets;
+        
+        console.log('Found assets:', assets.map(a => a.name).join(', '));
+        
+        // Updated to match the actual asset patterns
+        return {
+            windowsUrl: assets.find(a => a.name.toLowerCase().includes('windows'))?.browser_download_url,
+            macUrl: assets.find(a => a.name.toLowerCase().includes('macos'))?.browser_download_url,
+            version: response.data.tag_name
+        };
+    } catch (error) {
+        console.error('Error fetching latest release:', error.message);
+        return { windowsUrl: null, macUrl: null, version: null };
+    }
+}
+
+app.get('/download/windows', async (req, res) => {
+    try {
+        console.log('Windows download requested');
+        // Try specific version first
+        let fileUrl = 'https://github.com/earth-seed/ListForge-Releases/releases/download/v1.3.3.0/ListForge-1.3.3.0-windows.zip';
+        
+        try {
+            const response = await axios({
+                method: 'get',
+                url: fileUrl,
+                responseType: 'stream'
+            });
+            
+            // Set appropriate headers for download
+            res.setHeader('Content-Type', 'application/zip');
+            res.setHeader('Content-Disposition', 'attachment; filename="ListForge-Windows.zip"');
+            
+            // Pipe the response directly to the client
+            response.data.pipe(res);
+        } catch (error) {
+            console.log('Specific version not found, trying latest release');
+            const releaseInfo = await getLatestReleaseAssets();
+            
+            if (releaseInfo.windowsUrl) {
+                console.log('Found latest Windows download URL:', releaseInfo.windowsUrl);
+                const latestResponse = await axios({
+                    method: 'get',
+                    url: releaseInfo.windowsUrl,
+                    responseType: 'stream'
+                });
+                
+                // Get the filename from the URL
+                const filename = releaseInfo.windowsUrl.split('/').pop();
+                
+                res.setHeader('Content-Type', 'application/zip');
+                res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+                latestResponse.data.pipe(res);
+            } else {
+                throw new Error('Could not find Windows download in latest release');
+            }
+        }
+    } catch (error) {
+        console.error('Windows download error:', error.message);
+        res.status(500).send(`Download failed: ${error.message}`);
+    }
+});
+
+app.get('/download/mac', async (req, res) => {
+    try {
+        console.log('Mac download requested');
+        // Try specific version first
+        let fileUrl = 'https://github.com/earth-seed/ListForge-Releases/releases/download/v1.3.3.0/list_forge-1.3.3.0-macos.zip';
+        
+        try {
+            const response = await axios({
+                method: 'get',
+                url: fileUrl,
+                responseType: 'stream'
+            });
+            
+            // Set appropriate headers for download
+            res.setHeader('Content-Type', 'application/zip');
+            res.setHeader('Content-Disposition', 'attachment; filename="ListForge-Mac.zip"');
+            
+            // Pipe the response directly to the client
+            response.data.pipe(res);
+        } catch (error) {
+            console.log('Specific version not found, trying latest release');
+            const releaseInfo = await getLatestReleaseAssets();
+            
+            if (releaseInfo.macUrl) {
+                console.log('Found latest Mac download URL:', releaseInfo.macUrl);
+                const latestResponse = await axios({
+                    method: 'get',
+                    url: releaseInfo.macUrl,
+                    responseType: 'stream'
+                });
+                
+                // Get the filename from the URL
+                const filename = releaseInfo.macUrl.split('/').pop();
+                
+                res.setHeader('Content-Type', 'application/zip');
+                res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+                latestResponse.data.pipe(res);
+            } else {
+                throw new Error('Could not find Mac download in latest release');
+            }
+        }
+    } catch (error) {
+        console.error('Mac download error:', error.message);
+        res.status(500).send(`Download failed: ${error.message}`);
     }
 });
 
