@@ -340,7 +340,32 @@
                 
                 // Update subscription details
                 const subPlan = document.getElementById('sub-plan');
-                if (data.subscription.plan === 'yearly') {
+                if (data.subscription.paymentProvider === 'promo') {
+                    // Calculate duration in days between start and expiry
+                    if (data.subscription.startDate && data.subscription.expiryDate) {
+                        const startDate = new Date(data.subscription.startDate._seconds * 1000);
+                        const expiryDate = new Date(data.subscription.expiryDate._seconds * 1000);
+                        const durationDays = Math.round((expiryDate - startDate) / (1000 * 60 * 60 * 24));
+                        
+                        // Determine plan name based on duration
+                        if (durationDays >= 360 && durationDays <= 370) {
+                            console.log('Setting subscription plan to: 1 Year');
+                            subPlan.textContent = '1 Year';
+                        } else if (durationDays >= 85 && durationDays <= 95) {
+                            console.log('Setting subscription plan to: 3 Months');
+                            subPlan.textContent = '3 Months';
+                        } else if (durationDays >= 28 && durationDays <= 32) {
+                            console.log('Setting subscription plan to: 1 Month');
+                            subPlan.textContent = '1 Month';
+                        } else {
+                            console.log(`Setting subscription plan to: ${durationDays} Days`);
+                            subPlan.textContent = `${durationDays} Days`;
+                        }
+                    } else {
+                        console.log('Setting subscription plan to: Promotional');
+                        subPlan.textContent = 'Promotional';
+                    }
+                } else if (data.subscription.plan === 'yearly') {
                     console.log('Setting subscription plan to: Yearly');
                     subPlan.textContent = 'Yearly';
                 } else {

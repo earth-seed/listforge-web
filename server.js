@@ -415,7 +415,23 @@ async function hasUserPremiumAccess(userId) {
             return false;
         }
         
-        return userData.subscription.status === 'active';
+        // Check if subscription is active
+        if (userData.subscription.status !== 'active') {
+            return false;
+        }
+        
+        // If it's a promo code subscription, check if it has expired
+        if (userData.subscription.paymentProvider === 'promo' && userData.subscription.expiryDate) {
+            const expiryDate = userData.subscription.expiryDate.toDate();
+            const now = new Date();
+            
+            if (now > expiryDate) {
+                // Subscription has expired
+                return false;
+            }
+        }
+        
+        return true;
     } catch (error) {
         console.error('Error checking premium access:', error);
         return false;
@@ -457,9 +473,10 @@ async function applyPromoCode(userId, promoCode) {
             return { success: false, error: 'You have already used this promo code' };
         }
 
-        // Calculate expiration date (30 days from now)
+        // Calculate expiration date based on durationDays (default to 30 if not set)
         const expirationDate = new Date();
-        expirationDate.setDate(expirationDate.getDate() + 365);
+        const durationDays = promoData.durationDays || 30;
+        expirationDate.setDate(expirationDate.getDate() + durationDays);
 
         // Update user's subscription
         await admin.firestore().collection('users').doc(userId).update({
@@ -696,6 +713,69 @@ app.post('/auth/change-password', async (req, res) => {
         res.json({ success: true, message: 'Password updated successfully' });
     } catch (error) {
         console.error('Password change error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Helper function to check and update expired subscriptions
+async function updateExpiredSubscriptions() {
+    try {
+        const now = admin.firestore.Timestamp.now();
+        console.log('Checking for expired subscriptions at:', now.toDate());
+        
+        // Find all active promo subscriptions that have expired
+        const usersSnapshot = await admin.firestore()
+            .collection('users')
+            .where('subscription.status', '==', 'active')
+            .where('subscription.paymentProvider', '==', 'promo')
+            .get();
+        
+        const batch = admin.firestore().batch();
+        let expiredCount = 0;
+        
+        // Check each subscription
+        usersSnapshot.forEach(doc => {
+            const userData = doc.data();
+            if (userData.subscription && userData.subscription.expiryDate) {
+                // If expiry date is in the past, update status to expired
+                if (userData.subscription.expiryDate.toDate() < now.toDate()) {
+                    console.log(`Subscription expired for user: ${doc.id}`);
+                    
+                    batch.update(doc.ref, {
+                        'subscription.status': 'expired',
+                        'subscription.expiredAt': now
+                    });
+                    
+                    expiredCount++;
+                }
+            }
+        });
+        
+        // If we found expired subscriptions, update them
+        if (expiredCount > 0) {
+            await batch.commit();
+            console.log(`Updated ${expiredCount} expired subscriptions`);
+            return { success: true, count: expiredCount };
+        } else {
+            console.log('No expired subscriptions found');
+            return { success: true, count: 0 };
+        }
+    } catch (error) {
+        console.error('Error updating expired subscriptions:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+// Endpoint to check for expired subscriptions
+// This can be called manually or via a cron job
+app.post('/admin/update-expired-subscriptions', async (req, res) => {
+    try {
+        // In production, you would add authentication here
+        // to ensure only admins can call this endpoint
+        const result = await updateExpiredSubscriptions();
+        res.json(result);
+    } catch (error) {
+        console.error('Error:', error);
         res.status(500).json({ error: error.message });
     }
 });

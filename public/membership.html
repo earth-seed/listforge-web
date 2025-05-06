@@ -110,15 +110,9 @@
             <!-- Premium User Section (Only show for premium users) -->
             <div id="premium-user-section" class="max-w-4xl mx-auto mb-8 pricing-card rounded-2xl p-8 border border-gray-800 hidden">
                 <h2 class="text-2xl font-bold mb-4 text-center text-blue-500">Premium Member Status</h2>
-                <div class="grid md:grid-cols-2 gap-4 mb-6">
-                    <div>
-                        <p class="text-gray-400 text-sm">Current Plan</p>
-                        <p class="text-white text-lg" id="current-plan">Monthly</p>
-                    </div>
-                    <div>
-                        <p class="text-gray-400 text-sm">Expiration Date</p>
-                        <p class="text-white text-lg" id="expiration-date">January 1, 2024</p>
-                    </div>
+                <div class="mb-6 text-center">
+                    <p class="text-gray-400 text-sm">Your Premium Access Expires On</p>
+                    <p class="text-white text-2xl font-bold mt-2 mb-4" id="expiration-date">January 1, 2024</p>
                 </div>
                 <div class="text-center">
                     <p class="text-gray-400 mb-4">Thank you for being a premium member! Your support helps us continue improving ListForge.</p>
@@ -384,11 +378,13 @@
                 document.getElementById('payment-options-title').classList.add('hidden');
                 document.getElementById('pricing-cards').classList.add('hidden');
                 
-                // Update premium user info
-                document.getElementById('current-plan').textContent = data.subscription.plan === 'yearly' ? 'Yearly' : 'Monthly';
-                if (data.subscription.expirationDate) {
-                    const expiryDate = new Date(data.subscription.expirationDate._seconds * 1000);
-                    document.getElementById('expiration-date').textContent = expiryDate.toLocaleDateString();
+                // Update expiration date
+                if (data.subscription.expiryDate) {
+                    const expiryDate = new Date(data.subscription.expiryDate._seconds * 1000);
+                    const options = { year: 'numeric', month: 'long', day: 'numeric' };
+                    document.getElementById('expiration-date').textContent = expiryDate.toLocaleDateString(undefined, options);
+                } else {
+                    document.getElementById('expiration-date').textContent = 'No expiration date';
                 }
                 
                 // Update membership status message
