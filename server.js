@@ -490,11 +490,15 @@ async function applyPromoCode(userId, promoCode) {
         const durationDays = promoData.durationDays || 30;
         expirationDate.setDate(expirationDate.getDate() + durationDays);
 
+        // Determine plan type based on duration
+        const planType = durationDays >= 365 ? 'yearly' : 'monthly';
+
         // Update user's subscription
         await admin.firestore().collection('users').doc(userId).update({
             subscription: {
                 status: 'active',
                 type: 'trial',
+                plan: planType,
                 expirationDate: expirationDate.toISOString(),
                 promoCode: promoCode
             }
@@ -516,50 +520,81 @@ app.post('/auth/apply-promo', async (req, res) => {
             return res.status(401).json({ error: 'No token provided' });
         }
 
-        // For local development, get user data
-        const userId = 'dev-user-123'; // In production, get this from the token
-        const userDoc = await getDoc(doc(db, 'users', userId));
+        // Verify the token and get user ID
+        const decodedToken = await admin.auth().verifyIdToken(token);
+        const userId = decodedToken.uid;
+
+        // Get user data from Firestore
+        const userDoc = await admin.firestore().collection('users').doc(userId).get();
         
-        if (!userDoc.exists()) {
+        if (!userDoc.exists) {
             return res.status(404).json({ error: 'User not found' });
         }
 
-        // Check if promo code is valid (in production, you'd want to store these in a database)
-        const validPromoCodes = {
-            'LISTFORGE3M': true, // Example promo code
-            'WELCOME3M': true    // Another example promo code
-        };
+        const userData = userDoc.data();
 
-        if (!validPromoCodes[promoCode]) {
+        // Check if user already has an active subscription
+        if (userData.subscription?.status === 'active') {
+            return res.status(400).json({ error: 'You already have an active subscription' });
+        }
+
+        // Get promo code from Firestore
+        const promoDoc = await admin.firestore().collection('promoCodes').doc(promoCode).get();
+        
+        if (!promoDoc.exists) {
             return res.status(400).json({ error: 'Invalid promo code' });
         }
 
-        // Check if user already has an active subscription or trial
-        const userData = userDoc.data();
-        if (userData.subscription?.status === 'active' || userData.subscription?.status === 'trial') {
-            return res.status(400).json({ error: 'You already have an active subscription or trial' });
+        const promoData = promoDoc.data();
+
+        // Check if promo code is still valid
+        if (promoData.status !== 'active') {
+            return res.status(400).json({ error: 'This promo code is no longer active' });
         }
 
-        // Initialize trial period (3 months from now)
-        const trialEndDate = new Date();
-        trialEndDate.setMonth(trialEndDate.getMonth() + 3);
+        // Check if promo code has expired
+        if (promoData.expiryDate && promoData.expiryDate.toDate() < new Date()) {
+            return res.status(400).json({ error: 'This promo code has expired' });
+        }
 
-        // Update user data with trial period
-        await setDoc(doc(db, 'users', userId), {
-            ...userData,
+        // Check if promo code has reached its usage limit
+        if (promoData.maxUses && promoData.uses >= promoData.maxUses) {
+            return res.status(400).json({ error: 'This promo code has reached its usage limit' });
+        }
+
+        // Calculate expiration date based on durationDays (default to 30 if not set)
+        const expirationDate = new Date();
+        const durationDays = promoData.durationDays || 30;
+        expirationDate.setDate(expirationDate.getDate() + durationDays);
+
+        // Determine plan type based on duration
+        const planType = durationDays >= 365 ? 'yearly' : 'monthly';
+
+        // Update user's subscription in Firestore
+        await admin.firestore().collection('users').doc(userId).update({
             subscription: {
-                status: 'trial',
-                trialEndDate: trialEndDate.toISOString(),
-                usedPromoCode: promoCode
+                status: 'active',
+                type: 'trial',
+                plan: planType,
+                startDate: admin.firestore.FieldValue.serverTimestamp(),
+                expiryDate: admin.firestore.Timestamp.fromDate(expirationDate),
+                promoCode: promoCode,
+                paymentProvider: 'promo'
             }
+        });
+
+        // Increment the usage count of the promo code
+        await admin.firestore().collection('promoCodes').doc(promoCode).update({
+            uses: admin.firestore.FieldValue.increment(1)
         });
 
         res.json({
             success: true,
-            trialEndDate: trialEndDate.toISOString()
+            expirationDate: expirationDate.toISOString()
         });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error('Error applying promo code:', error);
+        res.status(500).json({ error: 'Failed to apply promo code' });
     }
 });
 
