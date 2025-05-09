@@ -2,10 +2,16 @@ services:
   - type: web
     name: listforge
     env: node
-    buildCommand: npm install
+    buildCommand: npm install && npm run build
     startCommand: node server.js
+    healthCheckPath: /auth/check
+    autoDeploy: true
     envVars:
       - key: EMAIL_USER
         sync: false
       - key: EMAIL_PASSWORD
-        sync: false 
+        sync: false
+      - key: FIREBASE_SERVICE_ACCOUNT
+        sync: false
+      - key: NODE_ENV
+        value: production 

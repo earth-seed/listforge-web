@@ -59,9 +59,19 @@ try {
     serviceAccount = require('./serviceAccount.json');
 }
 
-// Initialize Firebase Admin
+// Initialize Firebase Admin with custom settings
 admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount)
+    credential: admin.credential.cert(serviceAccount),
+    databaseURL: `https://${serviceAccount.project_id}.firebaseio.com`
+});
+
+// Configure Firestore settings
+const firestore = admin.firestore();
+firestore.settings({
+    ignoreUndefinedProperties: true,
+    timestampsInSnapshots: true,
+    experimentalForceLongPolling: true, // Use long polling instead of gRPC
+    experimentalAutoDetectLongPolling: true
 });
 
 // Initialize regular Firebase (for client operations)
