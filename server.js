@@ -568,8 +568,13 @@ app.post('/auth/apply-promo', async (req, res) => {
         }
 
         // Check if promo code has reached its usage limit
-        if (promoData.maxUses && promoData.uses >= promoData.maxUses) {
-            return res.status(400).json({ error: 'This promo code has reached its usage limit' });
+        if (promoData.maxUses !== undefined) {
+            const currentUses = promoData.uses || 0;
+            if (currentUses >= promoData.maxUses) {
+                return res.status(400).json({ 
+                    error: 'This promo code has reached its maximum usage limit' 
+                });
+            }
         }
 
         // Calculate expiration date based on durationDays (default to 30 if not set)
