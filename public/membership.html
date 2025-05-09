@@ -401,6 +401,8 @@
                 const membershipType = document.getElementById('membership-type');
                 if (data.subscription.plan === 'yearly') {
                     membershipType.textContent = 'Yearly';
+                } else if (data.subscription.plan === '3 Month Trial') {
+                    membershipType.textContent = '3 Month Trial';
                 } else {
                     membershipType.textContent = 'Monthly';
                 }
