@@ -260,8 +260,11 @@ app.get('/auth/check', async (req, res) => {
         const userDoc = await admin.firestore().collection('users').doc(decodedToken.uid).get();
         const userData = userDoc.exists ? userDoc.data() : {};
 
-        console.log('User data from Firestore:', userData);
-        console.log('User record from Auth:', userRecord);
+        // Add more detailed logging
+        console.log('Auth check - Token:', token.substring(0, 10) + '...');
+        console.log('Auth check - Decoded token:', decodedToken);
+        console.log('Auth check - User record:', userRecord);
+        console.log('Auth check - User data:', userData);
 
         res.json({ 
             authenticated: true, 
@@ -273,6 +276,11 @@ app.get('/auth/check', async (req, res) => {
         });
     } catch (error) {
         console.error('Auth check error:', error);
+        console.error('Auth check error details:', {
+            message: error.message,
+            code: error.code,
+            stack: error.stack
+        });
         res.status(401).json({ error: error.message });
     }
 });

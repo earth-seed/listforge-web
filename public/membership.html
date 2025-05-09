@@ -111,15 +111,9 @@
             <!-- Premium User Section (Only show for premium users) -->
             <div id="premium-user-section" class="max-w-4xl mx-auto mb-8 pricing-card rounded-2xl p-8 border border-gray-800 hidden">
                 <h2 class="text-2xl font-bold mb-4 text-center text-blue-500">Premium Member Status</h2>
-                <div class="grid md:grid-cols-2 gap-4 mb-6">
-                    <div>
-                        <p class="text-gray-400 text-sm">Current Plan</p>
-                        <p class="text-white text-lg" id="current-plan">Monthly</p>
-                    </div>
-                    <div>
-                        <p class="text-gray-400 text-sm">Expiration Date</p>
-                        <p class="text-white text-lg" id="expiration-date">January 1, 2024</p>
-                    </div>
+                <div class="text-center mb-6">
+                    <p class="text-gray-400 text-sm mb-2">Membership Type</p>
+                    <p class="text-white text-2xl font-bold" id="membership-type">Monthly</p>
                 </div>
                 <div class="text-center">
                     <p class="text-gray-400 mb-4">Thank you for being a premium member! Your support helps us continue improving ListForge.</p>
@@ -188,6 +182,10 @@
         .then(data => {
             console.log('Authentication successful, full data:', data);
             
+            if (!data.authenticated) {
+                throw new Error('Not authenticated');
+            }
+            
             // Update username in welcome message
             const usernameElement = document.getElementById('username-display');
             if (data.username) {
@@ -198,15 +196,22 @@
                 usernameElement.textContent = 'Member';
             }
 
-            // Update premium user info
-            document.getElementById('membership-type').textContent = data.subscription.plan === 'yearly' ? 'Yearly' : 'Monthly';
-            
-            // Update membership status message
-            document.getElementById('membership-status').textContent = 'You are a premium member!';
-            document.getElementById('membership-status').classList.add('text-blue-500');
+            // Update nav username
+            const navUsername = document.getElementById('nav-username');
+            if (data.username) {
+                navUsername.textContent = data.username;
+            }
+
+            // Check subscription status
+            checkSubscriptionStatus();
         })
         .catch(error => {
             console.error('Auth check error:', error);
+            console.error('Auth check error details:', {
+                message: error.message,
+                name: error.name,
+                stack: error.stack
+            });
             localStorage.removeItem('token');
             window.location.href = '/login.html';
         });
@@ -392,13 +397,12 @@
                 document.getElementById('payment-options-title').classList.add('hidden');
                 document.getElementById('pricing-cards').classList.add('hidden');
                 
-                // Update expiration date
-                if (data.subscription.expiryDate) {
-                    const expiryDate = new Date(data.subscription.expiryDate._seconds * 1000);
-                    const options = { year: 'numeric', month: 'long', day: 'numeric' };
-                    document.getElementById('expiration-date').textContent = expiryDate.toLocaleDateString(undefined, options);
+                // Update membership type
+                const membershipType = document.getElementById('membership-type');
+                if (data.subscription.plan === 'yearly') {
+                    membershipType.textContent = 'Yearly';
                 } else {
-                    document.getElementById('expiration-date').textContent = 'No expiration date';
+                    membershipType.textContent = 'Monthly';
                 }
                 
                 // Update membership status message
@@ -413,6 +417,11 @@
             }
         } catch (error) {
             console.error('Error checking subscription status:', error);
+            // If there's an error, show payment options
+            document.getElementById('premium-user-section').classList.add('hidden');
+            document.getElementById('promo-section').classList.remove('hidden');
+            document.getElementById('payment-options-title').classList.remove('hidden');
+            document.getElementById('pricing-cards').classList.remove('hidden');
         }
     }
 
