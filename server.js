@@ -501,7 +501,14 @@ async function applyPromoCode(userId, promoCode) {
         expirationDate.setDate(expirationDate.getDate() + durationDays);
 
         // Determine plan type based on duration
-        const planType = durationDays >= 365 ? 'yearly' : 'monthly';
+        let planType;
+        if (durationDays >= 365) {
+            planType = 'yearly';
+        } else if (durationDays === 90) {
+            planType = '3 Month Trial';
+        } else {
+            planType = 'monthly';
+        }
 
         // Update user's subscription
         await admin.firestore().collection('users').doc(userId).update({
@@ -583,7 +590,14 @@ app.post('/auth/apply-promo', async (req, res) => {
         expirationDate.setDate(expirationDate.getDate() + durationDays);
 
         // Determine plan type based on duration
-        const planType = durationDays >= 365 ? 'yearly' : 'monthly';
+        let planType;
+        if (durationDays >= 365) {
+            planType = 'yearly';
+        } else if (durationDays === 90) {
+            planType = '3 Month Trial';
+        } else {
+            planType = 'monthly';
+        }
 
         // Update user's subscription in Firestore
         await admin.firestore().collection('users').doc(userId).update({
