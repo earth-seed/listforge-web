@@ -219,11 +219,20 @@ app.post('/auth/login', async (req, res) => {
     } catch (error) {
         console.error('Login error:', error);
         
-        if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
-            return res.status(401).json({ error: 'Invalid email or password' });
+        // Check for Firebase auth error codes
+        const errorCode = error.code || error.message;
+        
+        if (errorCode.includes('user-not-found')) {
+            return res.status(401).json({ error: 'No account found with this email or username' });
+        } else if (errorCode.includes('wrong-password') || errorCode.includes('invalid-credential')) {
+            return res.status(401).json({ error: 'Incorrect password' });
+        } else if (errorCode.includes('invalid-email')) {
+            return res.status(401).json({ error: 'Invalid email format' });
+        } else if (errorCode.includes('network-request-failed')) {
+            return res.status(500).json({ error: 'Network error. Please check your internet connection' });
         }
         
-        res.status(500).json({ error: 'Login failed. Please try again.' });
+        res.status(500).json({ error: 'An unexpected error occurred. Please try again.' });
     }
 });
 
@@ -425,105 +434,103 @@ async function hasUserPremiumAccess(userId) {
 // Helper function to validate and apply promo code
 async function applyPromoCode(userId, promoCode) {
     try {
-        // Get the promo code from Firestore
-        const promoDoc = await admin.firestore()
-            .collection('promo_codes')
-            .doc(promoCode)
-            .get();
+        // Get user data
+        const userDoc = await admin.firestore().collection('users').doc(userId).get();
+        if (!userDoc.exists) {
+            return { success: false, error: 'User not found' };
+        }
 
-        if (!promoDoc.exists) {
+        const userData = userDoc.data();
+
+        // Check if user already has an active subscription
+        if (userData.subscription?.status === 'active') {
+            return { success: false, error: 'You already have an active subscription' };
+        }
+
+        // Define promo codes and their durations (in months)
+        const validPromoCodes = {
+            'MONTH1': 1,    // 1 month trial
+            'YEAR1': 12,    // 1 year trial
+            'TRIAL3M': 3    // 3 months trial
+        };
+
+        if (!validPromoCodes[promoCode]) {
             return { success: false, error: 'Invalid promo code' };
         }
 
-        const promoData = promoDoc.data();
-
-        // Check if promo code is expired
-        if (promoData.expiresAt && promoData.expiresAt.toDate() < new Date()) {
-            return { success: false, error: 'Promo code has expired' };
-        }
-
-        // Check if promo code has been used too many times
-        if (promoData.maxUses && promoData.uses >= promoData.maxUses) {
-            return { success: false, error: 'Promo code has reached its maximum uses' };
-        }
-
-        // Check if user has already used this promo code
-        const userPromoDoc = await admin.firestore()
-            .collection('user_promo_codes')
-            .doc(`${userId}_${promoCode}`)
-            .get();
-
-        if (userPromoDoc.exists) {
-            return { success: false, error: 'You have already used this promo code' };
-        }
-
-        // Calculate expiration date (30 days from now)
+        // Calculate expiration date
         const expirationDate = new Date();
-        expirationDate.setDate(expirationDate.getDate() + 365);
+        expirationDate.setMonth(expirationDate.getMonth() + validPromoCodes[promoCode]);
 
         // Update user's subscription
         await admin.firestore().collection('users').doc(userId).update({
             subscription: {
                 status: 'active',
-                plan: 'yearly',
-                startDate: admin.firestore.FieldValue.serverTimestamp(),
-                expiryDate: admin.firestore.Timestamp.fromDate(expirationDate),
-                paymentProvider: 'promo',
-                promoCode: promoCode,
-                updatedAt: admin.firestore.FieldValue.serverTimestamp()
+                type: 'trial',
+                expirationDate: expirationDate.toISOString(),
+                promoCode: promoCode
             }
         });
 
-        // Record promo code usage
-        await admin.firestore()
-            .collection('user_promo_codes')
-            .doc(`${userId}_${promoCode}`)
-            .set({
-                userId,
-                promoCode,
-                usedAt: admin.firestore.FieldValue.serverTimestamp()
-            });
-
-        // Update promo code usage count
-        await admin.firestore()
-            .collection('promo_codes')
-            .doc(promoCode)
-            .update({
-                uses: admin.firestore.FieldValue.increment(1)
-            });
-
-        return { success: true };
+        return { success: true, expirationDate: expirationDate.toISOString() };
     } catch (error) {
         console.error('Error applying promo code:', error);
-        return { success: false, error: 'An error occurred while applying the promo code' };
+        return { success: false, error: 'Failed to apply promo code' };
     }
 }
 
-// Endpoint to apply promo code
+// Add promo code endpoint
 app.post('/auth/apply-promo', async (req, res) => {
     try {
+        const { promoCode } = req.body;
         const token = req.headers.authorization?.split('Bearer ')[1];
         if (!token) {
             return res.status(401).json({ error: 'No token provided' });
         }
 
-        const decodedToken = await admin.auth().verifyIdToken(token);
-        const userId = decodedToken.uid;
-        const { promoCode } = req.body;
-
-        if (!promoCode) {
-            return res.status(400).json({ error: 'Promo code is required' });
-        }
-
-        const result = await applyPromoCode(userId, promoCode);
+        // For local development, get user data
+        const userId = 'dev-user-123'; // In production, get this from the token
+        const userDoc = await getDoc(doc(db, 'users', userId));
         
-        if (result.success) {
-            res.json({ success: true });
-        } else {
-            res.status(400).json({ error: result.error });
+        if (!userDoc.exists()) {
+            return res.status(404).json({ error: 'User not found' });
         }
+
+        // Check if promo code is valid (in production, you'd want to store these in a database)
+        const validPromoCodes = {
+            'LISTFORGE3M': true, // Example promo code
+            'WELCOME3M': true    // Another example promo code
+        };
+
+        if (!validPromoCodes[promoCode]) {
+            return res.status(400).json({ error: 'Invalid promo code' });
+        }
+
+        // Check if user already has an active subscription or trial
+        const userData = userDoc.data();
+        if (userData.subscription?.status === 'active' || userData.subscription?.status === 'trial') {
+            return res.status(400).json({ error: 'You already have an active subscription or trial' });
+        }
+
+        // Initialize trial period (3 months from now)
+        const trialEndDate = new Date();
+        trialEndDate.setMonth(trialEndDate.getMonth() + 3);
+
+        // Update user data with trial period
+        await setDoc(doc(db, 'users', userId), {
+            ...userData,
+            subscription: {
+                status: 'trial',
+                trialEndDate: trialEndDate.toISOString(),
+                usedPromoCode: promoCode
+            }
+        });
+
+        res.json({
+            success: true,
+            trialEndDate: trialEndDate.toISOString()
+        });
     } catch (error) {
-        console.error('Promo code application error:', error);
         res.status(500).json({ error: error.message });
     }
 });

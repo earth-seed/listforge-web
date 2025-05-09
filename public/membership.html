@@ -110,15 +110,9 @@
             <!-- Premium User Section (Only show for premium users) -->
             <div id="premium-user-section" class="max-w-4xl mx-auto mb-8 pricing-card rounded-2xl p-8 border border-gray-800 hidden">
                 <h2 class="text-2xl font-bold mb-4 text-center text-blue-500">Premium Member Status</h2>
-                <div class="grid md:grid-cols-2 gap-4 mb-6">
-                    <div>
-                        <p class="text-gray-400 text-sm">Current Plan</p>
-                        <p class="text-white text-lg" id="current-plan">Monthly</p>
-                    </div>
-                    <div>
-                        <p class="text-gray-400 text-sm">Expiration Date</p>
-                        <p class="text-white text-lg" id="expiration-date">January 1, 2024</p>
-                    </div>
+                <div class="text-center mb-6">
+                    <p class="text-gray-400 text-sm">Membership Type</p>
+                    <p class="text-white text-2xl font-bold" id="membership-type">Monthly</p>
                 </div>
                 <div class="text-center">
                     <p class="text-gray-400 mb-4">Thank you for being a premium member! Your support helps us continue improving ListForge.</p>
@@ -196,6 +190,13 @@
                 console.log('No username found in data, using default');
                 usernameElement.textContent = 'Member';
             }
+
+            // Update premium user info
+            document.getElementById('membership-type').textContent = data.subscription.plan === 'yearly' ? 'Yearly' : 'Monthly';
+            
+            // Update membership status message
+            document.getElementById('membership-status').textContent = 'You are a premium member!';
+            document.getElementById('membership-status').classList.add('text-blue-500');
         })
         .catch(error => {
             console.error('Auth check error:', error);
@@ -385,11 +386,7 @@
                 document.getElementById('pricing-cards').classList.add('hidden');
                 
                 // Update premium user info
-                document.getElementById('current-plan').textContent = data.subscription.plan === 'yearly' ? 'Yearly' : 'Monthly';
-                if (data.subscription.expirationDate) {
-                    const expiryDate = new Date(data.subscription.expirationDate._seconds * 1000);
-                    document.getElementById('expiration-date').textContent = expiryDate.toLocaleDateString();
-                }
+                document.getElementById('membership-type').textContent = data.subscription.plan === 'yearly' ? 'Yearly' : 'Monthly';
                 
                 // Update membership status message
                 document.getElementById('membership-status').textContent = 'You are a premium member!';
