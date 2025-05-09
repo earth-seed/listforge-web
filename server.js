@@ -549,7 +549,7 @@ app.post('/auth/apply-promo', async (req, res) => {
         }
 
         // Get promo code from Firestore
-        const promoDoc = await admin.firestore().collection('promoCodes').doc(promoCode).get();
+        const promoDoc = await admin.firestore().collection('promo_codes').doc(promoCode).get();
         
         if (!promoDoc.exists) {
             return res.status(400).json({ error: 'Invalid promo code' });
@@ -594,7 +594,7 @@ app.post('/auth/apply-promo', async (req, res) => {
         });
 
         // Increment the usage count of the promo code
-        await admin.firestore().collection('promoCodes').doc(promoCode).update({
+        await admin.firestore().collection('promo_codes').doc(promoCode).update({
             uses: admin.firestore.FieldValue.increment(1)
         });
 
