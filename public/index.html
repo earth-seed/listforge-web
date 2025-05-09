@@ -6,44 +6,138 @@
     <title>ListForge - Welcome</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Optional: Add any custom styles here */
         body {
             background-color: #000000;
+        }
+        .download-card {
+            background: linear-gradient(145deg, #1a1a1a 0%, #0a0a0a 100%);
+            transition: all 0.3s ease;
+            border: 1px solid #333;
+        }
+        .download-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+            border-color: #555;
         }
     </style>
 </head>
 <body>
-    <div class="min-h-screen bg-black flex flex-col items-center justify-center p-4">
-        <!-- Logo Section -->
-        <div class="mb-12">
-            <img 
-                src="/logo.png"
-                alt="Your App Logo"
-                class="w-[250px] h-[250px] rounded-xl"
-            >
-        </div>
+    <div class="min-h-screen bg-black flex flex-col">
+        <!-- Header with Auth Buttons -->
+        <header class="w-full p-4 flex justify-end">
+            <div class="flex space-x-4">
+                <a 
+                    href="login.html"
+                    class="px-6 py-2 border border-transparent text-base font-medium rounded-lg text-gray-900 bg-white hover:bg-gray-100 transition-colors duration-150"
+                >
+                    Login
+                </a>
+                
+                <a
+                    href="register.html"
+                    class="px-6 py-2 border border-gray-700 text-base font-medium rounded-lg text-white bg-gray-800 hover:bg-gray-700 transition-colors duration-150"
+                >
+                    Create Account
+                </a>
+            </div>
+        </header>
 
-        <!-- Auth Buttons -->
-        <div class="space-y-4 w-full max-w-sm">
-            <a 
-                href="login.html"
-                class="w-full flex items-center justify-center px-8 py-4 border border-transparent text-lg font-medium rounded-xl text-gray-900 bg-white hover:bg-gray-100 transition-colors duration-150"
-            >
-                Login
-            </a>
-            
-            <a
-                href="register.html"
-                class="w-full flex items-center justify-center px-8 py-4 border border-gray-700 text-lg font-medium rounded-xl text-white bg-gray-800 hover:bg-gray-700 transition-colors duration-150"
-            >
-                Create Account
-            </a>
-        </div>
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col items-center justify-center p-4">
+            <!-- Logo Section -->
+            <div class="mb-8">
+                <img 
+                    src="/logo.png"
+                    alt="ListForge Logo"
+                    class="w-[200px] h-[200px] rounded-xl"
+                >
+            </div>
 
-        <!-- Optional: App Description -->
-        <p class="mt-8 text-gray-400 text-center max-w-md">
-            Join the ListForge club to unlock all features and support the project
-        </p>
+            <!-- Welcome Message -->
+            <div class="text-center mb-12">
+                <h1 class="text-4xl font-bold text-white mb-4">Welcome to ListForge</h1>
+                <p class="text-gray-400 text-lg max-w-2xl">
+                    ListForge is an intuitive, comprehensive army-building and reference app, with support for WH40k (so far)!
+                </p>
+            </div>
+
+            <!-- Download Section -->
+            <div class="w-full max-w-4xl mb-12">
+                <h2 class="text-2xl font-bold text-white mb-6 text-center">Download ListForge</h2>
+                <div class="grid md:grid-cols-2 gap-6">
+                    <!-- Windows Download -->
+                    <div class="download-card rounded-xl p-6 text-center">
+                        <div class="bg-gray-700 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-300" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M2 5a2 2 0 012-2h12a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V5zm3.293 1.293a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 01-1.414-1.414L7.586 10 5.293 7.707a1 1 0 010-1.414zM11 12a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-bold text-white mb-2">Windows</h3>
+                        <p class="text-gray-400 text-sm mb-4">Windows 10 or later</p>
+                        <a href="/download/windows" class="inline-block bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg w-full">
+                            Download for Windows
+                        </a>
+                        <a href="/windows_installation_guide.html" target="_blank" class="inline-block bg-gray-800 hover:bg-gray-700 text-gray-300 px-4 py-2 rounded-lg w-full mt-2">
+                            Installation Guide
+                        </a>
+                    </div>
+                    
+                    <!-- macOS Download -->
+                    <div class="download-card rounded-xl p-6 text-center">
+                        <div class="bg-gray-700 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-300" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-bold text-white mb-2">macOS</h3>
+                        <p class="text-gray-400 text-sm mb-4">macOS 11 or later</p>
+                        <a href="/download/mac" class="inline-block bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg w-full">
+                            Download for Mac
+                        </a>
+                        <a href="/mac_installation_guide.html" target="_blank" class="inline-block bg-gray-800 hover:bg-gray-700 text-gray-300 px-4 py-2 rounded-lg w-full mt-2">
+                            Installation Guide
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Mobile Apps -->
+                <div class="mt-8 grid md:grid-cols-2 gap-6">
+                    <!-- iOS App -->
+                    <div class="download-card rounded-xl p-6 text-center">
+                        <div class="bg-gray-700 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-300" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M7 2a2 2 0 00-2 2v12a2 2 0 002 2h6a2 2 0 002-2V4a2 2 0 00-2-2H7zm3 14a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-bold text-white mb-2">iOS App</h3>
+                        <p class="text-gray-400 text-sm mb-4">iPhone and iPad</p>
+                        <a href="https://apps.apple.com/us/app/listforge/id6739130347" target="_blank" class="inline-block bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg w-full">
+                            Download on App Store
+                        </a>
+                    </div>
+                    
+                    <!-- Android App -->
+                    <div class="download-card rounded-xl p-6 text-center">
+                        <div class="bg-gray-700 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-300" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M7 2a2 2 0 00-2 2v12a2 2 0 002 2h6a2 2 0 002-2V4a2 2 0 00-2-2H7zm3 14a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-bold text-white mb-2">Android App</h3>
+                        <p class="text-gray-400 text-sm mb-4">Android 8.0 or later</p>
+                        <a href="https://play.google.com/store/apps/details?id=io.codeseed.list_forge" target="_blank" class="inline-block bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg w-full">
+                            Download on Google Play
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Footer Message -->
+        <footer class="w-full mt-auto pb-8">
+            <p class="text-gray-400 text-center max-w-md mx-auto">
+                Create an account to join the ListForge club to unlock premium features and support the project
+            </p>
+        </footer>
     </div>
 </body>
 </html> 

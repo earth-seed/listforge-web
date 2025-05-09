@@ -20,6 +20,9 @@ const {
 const admin = require('firebase-admin');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
+const axios = require('axios');
+const path = require('path');
+const fs = require('fs');
 
 const app = express();
 app.use(express.json());
@@ -424,7 +427,23 @@ async function hasUserPremiumAccess(userId) {
             return false;
         }
         
-        return userData.subscription.status === 'active';
+        // Check if subscription is active
+        if (userData.subscription.status !== 'active') {
+            return false;
+        }
+        
+        // If it's a promo code subscription, check if it has expired
+        if (userData.subscription.paymentProvider === 'promo' && userData.subscription.expiryDate) {
+            const expiryDate = userData.subscription.expiryDate.toDate();
+            const now = new Date();
+            
+            if (now > expiryDate) {
+                // Subscription has expired
+                return false;
+            }
+        }
+        
+        return true;
     } catch (error) {
         console.error('Error checking premium access:', error);
         return false;
@@ -458,9 +477,10 @@ async function applyPromoCode(userId, promoCode) {
             return { success: false, error: 'Invalid promo code' };
         }
 
-        // Calculate expiration date
+        // Calculate expiration date based on durationDays (default to 30 if not set)
         const expirationDate = new Date();
-        expirationDate.setMonth(expirationDate.getMonth() + validPromoCodes[promoCode]);
+        const durationDays = promoData.durationDays || 30;
+        expirationDate.setDate(expirationDate.getDate() + durationDays);
 
         // Update user's subscription
         await admin.firestore().collection('users').doc(userId).update({
@@ -705,6 +725,211 @@ app.post('/auth/change-password', async (req, res) => {
         console.error('Password change error:', error);
         res.status(500).json({ error: error.message });
     }
+});
+
+// Helper function to check and update expired subscriptions
+async function updateExpiredSubscriptions() {
+    try {
+        const now = admin.firestore.Timestamp.now();
+        console.log('Checking for expired subscriptions at:', now.toDate());
+        
+        // Find all active promo subscriptions that have expired
+        const usersSnapshot = await admin.firestore()
+            .collection('users')
+            .where('subscription.status', '==', 'active')
+            .where('subscription.paymentProvider', '==', 'promo')
+            .get();
+        
+        const batch = admin.firestore().batch();
+        let expiredCount = 0;
+        
+        // Check each subscription
+        usersSnapshot.forEach(doc => {
+            const userData = doc.data();
+            if (userData.subscription && userData.subscription.expiryDate) {
+                // If expiry date is in the past, update status to expired
+                if (userData.subscription.expiryDate.toDate() < now.toDate()) {
+                    console.log(`Subscription expired for user: ${doc.id}`);
+                    
+                    batch.update(doc.ref, {
+                        'subscription.status': 'expired',
+                        'subscription.expiredAt': now
+                    });
+                    
+                    expiredCount++;
+                }
+            }
+        });
+        
+        // If we found expired subscriptions, update them
+        if (expiredCount > 0) {
+            await batch.commit();
+            console.log(`Updated ${expiredCount} expired subscriptions`);
+            return { success: true, count: expiredCount };
+        } else {
+            console.log('No expired subscriptions found');
+            return { success: true, count: 0 };
+        }
+    } catch (error) {
+        console.error('Error updating expired subscriptions:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+// Endpoint to check for expired subscriptions
+// This can be called manually or via a cron job
+app.post('/admin/update-expired-subscriptions', async (req, res) => {
+    try {
+        // In production, you would add authentication here
+        // to ensure only admins can call this endpoint
+        const result = await updateExpiredSubscriptions();
+        res.json(result);
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Helper function to get asset URLs from latest release
+async function getLatestReleaseAssets() {
+    try {
+        console.log('Fetching latest release info from GitHub');
+        const response = await axios.get('https://api.github.com/repos/earth-seed/ListForge-Releases/releases/latest');
+        const assets = response.data.assets;
+        
+        console.log('Found assets:', assets.map(a => a.name).join(', '));
+        
+        // Updated to match the actual asset patterns
+        return {
+            windowsUrl: assets.find(a => a.name.toLowerCase().includes('windows'))?.browser_download_url,
+            macUrl: assets.find(a => a.name.toLowerCase().includes('macos'))?.browser_download_url,
+            version: response.data.tag_name
+        };
+    } catch (error) {
+        console.error('Error fetching latest release:', error.message);
+        return { windowsUrl: null, macUrl: null, version: null };
+    }
+}
+
+app.get('/download/windows', async (req, res) => {
+    try {
+        console.log('Windows download requested');
+        // Try specific version first
+        let fileUrl = 'https://github.com/earth-seed/ListForge-Releases/releases/download/v1.3.3.0/ListForge-1.3.3.0-windows.zip';
+        
+        try {
+            const response = await axios({
+                method: 'get',
+                url: fileUrl,
+                responseType: 'stream'
+            });
+            
+            // Set appropriate headers for download
+            res.setHeader('Content-Type', 'application/zip');
+            res.setHeader('Content-Disposition', 'attachment; filename="ListForge-Windows.zip"');
+            
+            // Pipe the response directly to the client
+            response.data.pipe(res);
+        } catch (error) {
+            console.log('Specific version not found, trying latest release');
+            const releaseInfo = await getLatestReleaseAssets();
+            
+            if (releaseInfo.windowsUrl) {
+                console.log('Found latest Windows download URL:', releaseInfo.windowsUrl);
+                const latestResponse = await axios({
+                    method: 'get',
+                    url: releaseInfo.windowsUrl,
+                    responseType: 'stream'
+                });
+                
+                // Get the filename from the URL
+                const filename = releaseInfo.windowsUrl.split('/').pop();
+                
+                res.setHeader('Content-Type', 'application/zip');
+                res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+                latestResponse.data.pipe(res);
+            } else {
+                throw new Error('Could not find Windows download in latest release');
+            }
+        }
+    } catch (error) {
+        console.error('Windows download error:', error.message);
+        res.status(500).send(`Download failed: ${error.message}`);
+    }
+});
+
+app.get('/download/mac', async (req, res) => {
+    try {
+        console.log('Mac download requested');
+        // Try specific version first
+        let fileUrl = 'https://github.com/earth-seed/ListForge-Releases/releases/download/v1.3.3.0/list_forge-1.3.3.0-macos.zip';
+        
+        try {
+            const response = await axios({
+                method: 'get',
+                url: fileUrl,
+                responseType: 'stream'
+            });
+            
+            // Set appropriate headers for download
+            res.setHeader('Content-Type', 'application/zip');
+            res.setHeader('Content-Disposition', 'attachment; filename="ListForge-Mac.zip"');
+            
+            // Pipe the response directly to the client
+            response.data.pipe(res);
+        } catch (error) {
+            console.log('Specific version not found, trying latest release');
+            const releaseInfo = await getLatestReleaseAssets();
+            
+            if (releaseInfo.macUrl) {
+                console.log('Found latest Mac download URL:', releaseInfo.macUrl);
+                const latestResponse = await axios({
+                    method: 'get',
+                    url: releaseInfo.macUrl,
+                    responseType: 'stream'
+                });
+                
+                // Get the filename from the URL
+                const filename = releaseInfo.macUrl.split('/').pop();
+                
+                res.setHeader('Content-Type', 'application/zip');
+                res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+                latestResponse.data.pipe(res);
+            } else {
+                throw new Error('Could not find Mac download in latest release');
+            }
+        }
+    } catch (error) {
+        console.error('Mac download error:', error.message);
+        res.status(500).send(`Download failed: ${error.message}`);
+    }
+});
+
+// Installation guide placeholder endpoints
+app.get('/guides/windows', (req, res) => {
+    // This is a placeholder route for when the Windows installation guide PDF is ready
+    res.status(404).send('Windows installation guide coming soon!');
+    
+    // When the PDF is ready, uncomment the following:
+    /*
+    const filePath = path.join(__dirname, 'public/guides/windows-installation.pdf');
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'inline; filename="ListForge-Windows-Installation-Guide.pdf"');
+    fs.createReadStream(filePath).pipe(res);
+    */
+});
+
+app.get('/guides/mac', (req, res) => {
+    // This is a placeholder route for when the Mac installation guide PDF is ready
+    res.status(404).send('Mac installation guide coming soon!');
+    
+    // When the PDF is ready, uncomment the following:
+    /*
+    const filePath = path.join(__dirname, 'public/guides/mac-installation.pdf');
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'inline; filename="ListForge-Mac-Installation-Guide.pdf"');
+    fs.createReadStream(filePath).pipe(res);
+    */
 });
 
 // Serve static files
