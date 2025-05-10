@@ -874,12 +874,13 @@ async function getLatestReleaseAssets() {
         // Updated to match the actual asset patterns
         return {
             windowsUrl: assets.find(a => a.name.toLowerCase().includes('windows'))?.browser_download_url,
-            macUrl: assets.find(a => a.name.toLowerCase().includes('macos'))?.browser_download_url,
+            macUrl: assets.find(a => a.name.toLowerCase().includes('macos') && a.name.toLowerCase().endsWith('.dmg'))?.browser_download_url,
+            linuxUrl: assets.find(a => a.name.toLowerCase().includes('linux'))?.browser_download_url,
             version: response.data.tag_name
         };
     } catch (error) {
         console.error('Error fetching latest release:', error.message);
-        return { windowsUrl: null, macUrl: null, version: null };
+        return { windowsUrl: null, macUrl: null, linuxUrl: null, version: null };
     }
 }
 
@@ -935,6 +936,34 @@ app.get('/download/mac', async (req, res) => {
         }
     } catch (error) {
         console.error('Mac download error:', error.message);
+        res.status(500).send(`Download failed: ${error.message}`);
+    }
+});
+
+app.get('/download/linux', async (req, res) => {
+    try {
+        console.log('Linux download requested');
+        const releaseInfo = await getLatestReleaseAssets();
+        
+        if (releaseInfo.linuxUrl) {
+            console.log('Found latest Linux download URL:', releaseInfo.linuxUrl);
+            const latestResponse = await axios({
+                method: 'get',
+                url: releaseInfo.linuxUrl,
+                responseType: 'stream'
+            });
+            
+            // Get the filename from the URL
+            const filename = releaseInfo.linuxUrl.split('/').pop();
+            
+            res.setHeader('Content-Type', 'application/zip');
+            res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+            latestResponse.data.pipe(res);
+        } else {
+            throw new Error('Could not find Linux download in latest release');
+        }
+    } catch (error) {
+        console.error('Linux download error:', error.message);
         res.status(500).send(`Download failed: ${error.message}`);
     }
 });
