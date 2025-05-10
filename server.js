@@ -886,43 +886,24 @@ async function getLatestReleaseAssets() {
 app.get('/download/windows', async (req, res) => {
     try {
         console.log('Windows download requested');
-        // Try specific version first
-        let fileUrl = 'https://github.com/earth-seed/ListForge-Releases/releases/download/v1.3.3.0/ListForge-1.3.3.0-windows.zip';
+        const releaseInfo = await getLatestReleaseAssets();
         
-        try {
-            const response = await axios({
+        if (releaseInfo.windowsUrl) {
+            console.log('Found latest Windows download URL:', releaseInfo.windowsUrl);
+            const latestResponse = await axios({
                 method: 'get',
-                url: fileUrl,
+                url: releaseInfo.windowsUrl,
                 responseType: 'stream'
             });
             
-            // Set appropriate headers for download
+            // Get the filename from the URL
+            const filename = releaseInfo.windowsUrl.split('/').pop();
+            
             res.setHeader('Content-Type', 'application/zip');
-            res.setHeader('Content-Disposition', 'attachment; filename="ListForge-Windows.zip"');
-            
-            // Pipe the response directly to the client
-            response.data.pipe(res);
-        } catch (error) {
-            console.log('Specific version not found, trying latest release');
-            const releaseInfo = await getLatestReleaseAssets();
-            
-            if (releaseInfo.windowsUrl) {
-                console.log('Found latest Windows download URL:', releaseInfo.windowsUrl);
-                const latestResponse = await axios({
-                    method: 'get',
-                    url: releaseInfo.windowsUrl,
-                    responseType: 'stream'
-                });
-                
-                // Get the filename from the URL
-                const filename = releaseInfo.windowsUrl.split('/').pop();
-                
-                res.setHeader('Content-Type', 'application/zip');
-                res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-                latestResponse.data.pipe(res);
-            } else {
-                throw new Error('Could not find Windows download in latest release');
-            }
+            res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+            latestResponse.data.pipe(res);
+        } else {
+            throw new Error('Could not find Windows download in latest release');
         }
     } catch (error) {
         console.error('Windows download error:', error.message);
@@ -933,43 +914,24 @@ app.get('/download/windows', async (req, res) => {
 app.get('/download/mac', async (req, res) => {
     try {
         console.log('Mac download requested');
-        // Try specific version first
-        let fileUrl = 'https://github.com/earth-seed/ListForge-Releases/releases/download/v1.3.3.0/list_forge-1.3.3.0-macos.zip';
+        const releaseInfo = await getLatestReleaseAssets();
         
-        try {
-            const response = await axios({
+        if (releaseInfo.macUrl) {
+            console.log('Found latest Mac download URL:', releaseInfo.macUrl);
+            const latestResponse = await axios({
                 method: 'get',
-                url: fileUrl,
+                url: releaseInfo.macUrl,
                 responseType: 'stream'
             });
             
-            // Set appropriate headers for download
-            res.setHeader('Content-Type', 'application/zip');
-            res.setHeader('Content-Disposition', 'attachment; filename="ListForge-Mac.zip"');
+            // Get the filename from the URL
+            const filename = releaseInfo.macUrl.split('/').pop();
             
-            // Pipe the response directly to the client
-            response.data.pipe(res);
-        } catch (error) {
-            console.log('Specific version not found, trying latest release');
-            const releaseInfo = await getLatestReleaseAssets();
-            
-            if (releaseInfo.macUrl) {
-                console.log('Found latest Mac download URL:', releaseInfo.macUrl);
-                const latestResponse = await axios({
-                    method: 'get',
-                    url: releaseInfo.macUrl,
-                    responseType: 'stream'
-                });
-                
-                // Get the filename from the URL
-                const filename = releaseInfo.macUrl.split('/').pop();
-                
-                res.setHeader('Content-Type', 'application/zip');
-                res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-                latestResponse.data.pipe(res);
-            } else {
-                throw new Error('Could not find Mac download in latest release');
-            }
+            res.setHeader('Content-Type', 'application/x-apple-diskimage');
+            res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+            latestResponse.data.pipe(res);
+        } else {
+            throw new Error('Could not find Mac download in latest release');
         }
     } catch (error) {
         console.error('Mac download error:', error.message);
